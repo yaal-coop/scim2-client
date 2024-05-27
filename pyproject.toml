@@ -1,0 +1,113 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "httpx-scim-client"
+version = "0.1.0"
+description = "Pythonically build SCIM requests and parse SCIM responses"
+authors = ["Yaal Coop <contact@yaal.coop>"]
+license = "MIT"
+readme = "README.md"
+keywords = ["scim", "scim2", "provisioning", "httpx", "api"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Web Environment",
+    "Programming Language :: Python",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic-scim2 = "^0.2.1"
+httpx = "^0.27.0"
+
+[tool.poetry.group.doc]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.1"
+pytest-coverage = "^0.0"
+pytest-httpserver = "^1.0.10"
+
+[tool.poetry.group.doc.dependencies]
+shibuya = "^2024.5.15"
+sphinx = "^7.3.7"
+myst-parser = "^3.0.1"
+
+[tool.coverage.run]
+source = [
+    "httpx_scim_client",
+    "tests",
+]
+omit = [".tox/*"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "@pytest.mark.skip",
+    "pragma: no cover",
+    "raise NotImplementedError",
+]
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "F", # pyflakes
+    "I", # isort
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # line-too-long
+    "E722", # bare-except
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[too.ruff.format]
+docstring-code-format = true
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = true
+skipsdist = true
+envlist =
+    style
+    py310
+    py311
+    py312
+    doc
+    coverage
+
+[testenv]
+allowlist_externals = poetry
+commands =
+    poetry install
+    poetry run pytest --showlocals --full-trace {posargs}
+
+[testenv:style]
+commands =
+    pip install pre-commit
+    pre-commit run --all-files
+
+[testenv:doc]
+commands =
+    poetry install --with doc --without dev
+    poetry run sphinx-build --builder html doc build/sphinx/html
+    poetry run sphinx-build --builder man doc build/sphinx/html
+
+[testenv:coverage]
+commands =
+    poetry install
+    poetry run pytest --cov --cov-fail-under=100 --cov-report term:skip-covered {posargs}
+    poetry run coverage html
+"""

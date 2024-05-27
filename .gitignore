@@ -1,0 +1,14 @@
+.env
+*.pyc
+*.mo
+*.prof
+.python_history
+.tox
+.coverage
+.coverage.*
+htmlcov
+*.egg-info
+build
+dist
+.vscode
+poetry.lock
