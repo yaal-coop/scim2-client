@@ -11,4 +11,3 @@ htmlcov
 build
 dist
 .vscode
-poetry.lock
