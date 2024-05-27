@@ -49,7 +49,7 @@ html_theme = "shibuya"
 html_baseurl = "https://httpx-scim-client.readthedocs.io"
 html_theme_options = {
     "globaltoc_expand_depth": 3,
-    "accent_color": "olive",
+    "accent_color": "lime",
     "github_url": "https://github.com/yaal-coop/httpx-scim-client",
     "mastodon_url": "https://toot.aquilenet.fr/@yaal",
     "nav_links": [
