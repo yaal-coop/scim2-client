@@ -77,9 +77,13 @@ class SCIMClient:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
         <7644#section-3.3>`.
 
-        :param resource: The resource to create :param \\**kwargs:
-            Additional parameters passed to the underlying HTTP request
+        :param resource: The resource to create
+        :param kwargs: Additional parameters passed to the underlying HTTP request
             library.
+
+        :return:
+            - An :class:`~pydantic_scim2.Error` object in case of error.
+            - The created object as returned by the server in case of success.
         """
 
         url = self.resource_endpoint(resource.__class__)
@@ -120,13 +124,16 @@ class SCIMClient:
         §3.4.2 <7644#section-3.4.2>`.
 
         - If `id` is not :data:`None`, the resource with the exact id will be reached.
-          Return a `resource_type` object in case of success, or :class:`~pydantic_scim2.Error`.
         - If `id` is :data:`None`, all the resources with the given type will be reached.
-          Return a :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success, or :class:`~pydantic_scim2.Error`.
 
         :param resource_type: A :class:`~pydantic_scim2.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
-        :param \\**kwargs: Additional parameters passed to the underlying HTTP request library.
+        :param kwargs: Additional parameters passed to the underlying HTTP request library.
+
+        :return:
+            - A :class:`~pydantic_scim2.Error` object in case of error.
+            - A `resource_type` object in case of success if `id` is not :data:`None`
+            - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
         """
 
         if not id:
@@ -170,8 +177,13 @@ class SCIMClient:
         :rfc:`RFC7644 §3.4.2.1 <7644#section-3.4.2.1>`.
 
         :param resource_types: Resource type or union of types expected
-            to be read from the response. :param \\**kwargs: Additional
-            parameters passed to the underlying HTTP request library.
+            to be read from the response.
+        :param kwargs: Additional parameters passed to the underlying
+            HTTP request library.
+
+        :return:
+            - A :class:`~pydantic_scim2.Error` object in case of error.
+            - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success.
         """
 
         # A query against a server root indicates that all resources within the
@@ -201,7 +213,15 @@ class SCIMClient:
 
     def delete(self, resource_type: Type, id: str, **kwargs) -> Optional[Error]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
-        <7644#section-3.6>`."""
+        <7644#section-3.6>`.
+
+        :param kwargs: Additional parameters passed to the underlying
+            HTTP request library.
+
+        :return:
+            - A :class:`~pydantic_scim2.Error` object in case of error.
+            - :data:`None` in case of success.
+        """
 
         url = self.resource_endpoint(resource_type) + f"/{id}"
         response = self.client.delete(url, **kwargs)
@@ -229,8 +249,12 @@ class SCIMClient:
         :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
         :param resource: The new state of the resource to replace.
-            :param \\**kwargs: Additional parameters passed to the
-            underlying HTTP request library.
+        :param kwargs: Additional parameters passed to the underlying
+            HTTP request library.
+
+        :return:
+            - An :class:`~pydantic_scim2.Error` object in case of error.
+            - The updated object as returned by the server in case of success.
         """
 
         if not resource.id:
