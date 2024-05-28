@@ -9,6 +9,8 @@ from pydantic_scim2 import Group
 from pydantic_scim2 import ListResponse
 from pydantic_scim2 import Meta
 from pydantic_scim2 import Resource
+from pydantic_scim2 import SearchRequest
+from pydantic_scim2 import SortOrder
 from pydantic_scim2 import User
 
 from httpx_scim_client import SCIMClient
@@ -372,3 +374,39 @@ def test_response_bad_content_type(client):
     scim_client = SCIMClient(client)
     with pytest.raises(UnexpectedContentType):
         scim_client.query(User, "bad-content-type")
+
+
+def test_search_request(httpserver, client):
+    query_string = "attributes=userName&attributes=displayName&excludedAttributes=timezone&excludedAttributes=phoneNumbers&filter=userName%20Eq%20%22john%22&sortBy=userName&sortOrder=ascending&startIndex=1&count=10"
+
+    httpserver.expect_request(
+        "/Users/with-qs", query_string=query_string
+    ).respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "id": "with-qs",
+            "userName": "bjensen@example.com",
+            "meta": {
+                "resourceType": "User",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff590"',
+                "location": "https://example.com/v2/Users/with-qs",
+            },
+        },
+        status=200,
+    )
+    req = SearchRequest(
+        attributes=["userName", "displayName"],
+        excluded_attributes=["timezone", "phoneNumbers"],
+        filter='userName Eq "john"',
+        sort_by="userName",
+        sort_order=SortOrder.ascending,
+        start_index=1,
+        count=10,
+    )
+
+    scim_client = SCIMClient(client)
+    response = scim_client.query(User, "with-qs", req)
+    assert isinstance(response, User)
+    assert response.id == "with-qs"
