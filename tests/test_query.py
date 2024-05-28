@@ -239,8 +239,8 @@ def test_user_with_valid_id(client):
 
 
 def test_user_with_invalid_id(client):
-    """Test that querying an existing user with an invalid id instantiate an
-    Error object."""
+    """Test that querying an user with an invalid id instantiate an Error
+    object."""
 
     scim_client = SCIMClient(client)
     response = scim_client.query(User, "unknown")

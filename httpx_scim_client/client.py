@@ -33,7 +33,10 @@ class SCIMClient:
         return f"/{resource_type.__name__}s"
 
     def check_response(
-        self, response: Response, expected_status_codes: List[int], expected_type: Type
+        self,
+        response: Response,
+        expected_status_codes: List[int],
+        expected_type: Optional[Type] = None,
     ):
         if response.status_code not in expected_status_codes:
             raise UnexpectedStatusCode(response)
@@ -52,15 +55,23 @@ class SCIMClient:
         # the errors in the body of the response in a JSON format
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
 
-        try:
-            response_payload = response.json()
-        except json.decoder.JSONDecodeError as exc:
-            raise UnexpectedContentFormat(response) from exc
+        if response.status_code in (204, 205):
+            response_payload = None
+
+        else:
+            try:
+                response_payload = response.json()
+            except json.decoder.JSONDecodeError as exc:
+                raise UnexpectedContentFormat(response) from exc
 
         try:
             return Error.model_validate(response_payload)
         except ValidationError:
+            pass
+
+        if expected_type:
             return expected_type.model_validate(response_payload)
+        return response_payload
 
     def create(self, resource: AnyResource) -> Union[AnyResource, Error]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
@@ -179,7 +190,30 @@ class SCIMClient:
             response, expected_status_codes, ListResponse[resource_types]
         )
 
-    def delete(self, resource_type: Type, id: str) -> Optional[Error]: ...
+    def delete(self, resource_type: Type, id: str) -> Optional[Error]:
+        """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
+        <7644#section-3.6>`."""
+
+        url = self.resource_endpoint(resource_type) + f"/{id}"
+        response = self.client.delete(url)
+
+        expected_status_codes = [
+            # Resource deletion HTTP codes defined at:
+            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.6
+            204,
+            # Default HTTP codes defined at:
+            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
+            307,
+            308,
+            400,
+            401,
+            403,
+            404,
+            412,
+            500,
+            501,
+        ]
+        return self.check_response(response, expected_status_codes)
 
     def replace(self, resource: AnyResource) -> Union[AnyResource, Error]: ...
 

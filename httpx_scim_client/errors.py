@@ -12,9 +12,11 @@ class UnexpectedStatusCode(SCIMClientError):
         self,
         response: Response,
         *args,
-        message="Unexpected response status code",
         **kwargs,
     ):
+        message = kwargs.pop(
+            "message", f"Unexpected response status code: {response.status_code}"
+        )
         super().__init__(response, message, *args, **kwargs)
 
 
@@ -23,9 +25,10 @@ class UnexpectedContentType(SCIMClientError):
         self,
         response: Response,
         *args,
-        message="Unexpected response content type",
         **kwargs,
     ):
+        content_type = response.headers.get("content-type", "")
+        message = kwargs.pop("message", f"Unexpected content type: {content_type}")
         super().__init__(response, message, *args, **kwargs)
 
 
@@ -34,7 +37,7 @@ class UnexpectedContentFormat(SCIMClientError):
         self,
         response: Response,
         *args,
-        message="Unexpected response content type",
         **kwargs,
     ):
+        message = kwargs.pop("message", "Unexpected response content format")
         super().__init__(response, message, *args, **kwargs)
