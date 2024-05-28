@@ -16,6 +16,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "myst_parser",
 ]
 
 templates_path = ["_templates"]
@@ -48,7 +49,7 @@ html_theme = "shibuya"
 # html_static_path = ["_static"]
 html_baseurl = "https://httpx-scim-client.readthedocs.io"
 html_theme_options = {
-    "globaltoc_expand_depth": 3,
+    "globaltoc_expand_depth": 2,
     "accent_color": "lime",
     "github_url": "https://github.com/yaal-coop/httpx-scim-client",
     "mastodon_url": "https://toot.aquilenet.fr/@yaal",
@@ -78,28 +79,10 @@ html_theme_options = {
         },
     ],
 }
-
-# -- Options for manual page output ---------------------------------------
-
-man_pages = [
-    (master_doc, "httpx-scim-client", "httpx-scim-client Documentation", [author], 1)
-]
-
-# -- Options for Texinfo output -------------------------------------------
-
-texinfo_documents = [
-    (
-        master_doc,
-        "httpx_scim_client",
-        "httpx_scim_client Documentation",
-        author,
-        "httpx_scim_client",
-        "One line description of project.",
-        "Miscellaneous",
-    )
-]
-
-# -- Options for autosectionlabel -----------------------------------------
-
-autosectionlabel_prefix_document = True
-autosectionlabel_maxdepth = 2
+html_context = {
+    "source_type": "github",
+    "source_user": "yaal-coop",
+    "source_repo": "httpx-scim-client",
+    "source_version": "main",
+    "source_docs_path": "/doc/",
+}

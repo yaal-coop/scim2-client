@@ -8,5 +8,6 @@ Table of contents
 .. toctree::
     :maxdepth: 2
 
+    tutorial
     reference
     changelog
