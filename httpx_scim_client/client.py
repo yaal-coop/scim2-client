@@ -1,3 +1,4 @@
+import json
 import json.decoder
 from typing import List
 from typing import Optional
@@ -11,7 +12,7 @@ from pydantic_scim2 import AnyResource
 from pydantic_scim2 import Error
 from pydantic_scim2 import ListResponse
 from pydantic_scim2 import PatchOp
-from pydantic_scim2 import SortOrder
+from pydantic_scim2 import SearchRequest
 
 from .errors import UnexpectedContentFormat
 from .errors import UnexpectedContentType
@@ -111,13 +112,7 @@ class SCIMClient:
         self,
         resource_type: Type,
         id: Optional[str] = None,
-        attributes: Optional[List[str]] = None,
-        excluded_attributes: Optional[List[str]] = None,
-        filter: Optional[str] = None,
-        sort_by: Optional[str] = None,
-        sort_order: Optional[SortOrder] = None,
-        start_index: Optional[int] = None,
-        count: Optional[int] = None,
+        search_request: Optional[SearchRequest] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644
@@ -128,6 +123,7 @@ class SCIMClient:
 
         :param resource_type: A :class:`~pydantic_scim2.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
+        :param search_request: An object detailing the search query parameters.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
@@ -135,6 +131,14 @@ class SCIMClient:
             - A `resource_type` object in case of success if `id` is not :data:`None`
             - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
         """
+
+        payload = (
+            search_request.model_dump(
+                by_alias=True, exclude_none=True, exclude_unset=True, mode="json"
+            )
+            if search_request
+            else None
+        )
 
         if not id:
             expected_type = ListResponse[resource_type]
@@ -158,19 +162,13 @@ class SCIMClient:
             404,
             500,
         ]
-        response = self.client.get(url, **kwargs)
+        response = self.client.get(url, params=payload, **kwargs)
         return self.check_response(response, expected_status_codes, expected_type)
 
     def query_all(
         self,
         resource_types: Type,
-        attributes: Optional[List[str]] = None,
-        excluded_attributes: Optional[List[str]] = None,
-        filter: Optional[str] = None,
-        sort_by: Optional[str] = None,
-        sort_order: Optional[SortOrder] = None,
-        start_index: Optional[int] = None,
-        count: Optional[int] = None,
+        search_request: Optional[SearchRequest] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
         """Perform a GET request to read all available resources, as defined in
@@ -178,6 +176,7 @@ class SCIMClient:
 
         :param resource_types: Resource type or union of types expected
             to be read from the response.
+        :param search_request: An object detailing the search query parameters.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -190,7 +189,14 @@ class SCIMClient:
         # server SHALL be included, subject to filtering.
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.4.2.1
 
-        response = self.client.get("/")
+        payload = (
+            search_request.model_dump(
+                by_alias=True, exclude_none=True, exclude_unset=True, mode="json"
+            )
+            if search_request
+            else None
+        )
+        response = self.client.get("/", params=payload)
 
         expected_status_codes = [
             # Resource querying HTTP codes defined at:

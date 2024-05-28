@@ -1,6 +1,6 @@
 # httpx-scim-client
 
-A SCIM client library built upon [pydantic-scim2](https://pydantic-scim2.readthedocs.io), that pythonically build requests and parse responses, following the [RFC7643](https://www.rfc-editor.org/rfc/rfc7643) and [RFC7644](https://www.rfc-editor.org/rfc/rfc7644) specifications.
+A SCIM client library built upon [pydantic-scim2](https://pydantic-scim2.readthedocs.io), that pythonically build requests and parse responses, following the [RFC7643](https://datatracker.ietf.org/doc/html/rfc7643.html) and [RFC7644](https://datatracker.ietf.org/doc/html/rfc7644.html) specifications.
 ## Installation
 
 ```shell
