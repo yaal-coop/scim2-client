@@ -215,6 +215,38 @@ class SCIMClient:
         ]
         return self.check_response(response, expected_status_codes)
 
-    def replace(self, resource: AnyResource) -> Union[AnyResource, Error]: ...
+    def replace(self, resource: AnyResource) -> Union[AnyResource, Error]:
+        """Perform a PUT request to replace a resource, as defined in
+        :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
-    def modify(self, resource: AnyResource, op: PatchOp) -> Optional[AnyResource]: ...
+        :param resource: The new state of the resource to replace.
+        """
+
+        if not resource.id:
+            raise Exception("Resource must have an id")
+
+        dump = resource.model_dump(exclude_none=True, by_alias=True, mode="json")
+        url = self.resource_endpoint(resource.__class__) + f"/{resource.id}"
+        response = self.client.put(url, json=dump)
+
+        expected_status_codes = [
+            # Resource querying HTTP codes defined at:
+            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2
+            200,
+            # Default HTTP codes defined at:
+            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
+            307,
+            308,
+            400,
+            401,
+            403,
+            404,
+            409,
+            412,
+            500,
+            501,
+        ]
+        return self.check_response(response, expected_status_codes, resource.__class__)
+
+    def modify(self, resource: AnyResource, op: PatchOp) -> Optional[AnyResource]:
+        raise NotImplementedError()
