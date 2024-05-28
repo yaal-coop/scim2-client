@@ -16,6 +16,8 @@ from httpx_scim_client.client import UnexpectedContentFormat
 from httpx_scim_client.client import UnexpectedContentType
 from httpx_scim_client.client import UnexpectedStatusCode
 
+# TODO: test for codes 400, 501
+
 
 @pytest.fixture
 def httpserver(httpserver):
