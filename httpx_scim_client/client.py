@@ -73,13 +73,18 @@ class SCIMClient:
             return expected_type.model_validate(response_payload)
         return response_payload
 
-    def create(self, resource: AnyResource) -> Union[AnyResource, Error]:
+    def create(self, resource: AnyResource, **kwargs) -> Union[AnyResource, Error]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
-        <7644#section-3.3>`."""
+        <7644#section-3.3>`.
+
+        :param resource: The resource to create :param \\**kwargs:
+            Additional parameters passed to the underlying HTTP request
+            library.
+        """
 
         url = self.resource_endpoint(resource.__class__)
         dump = resource.model_dump(exclude_none=True, by_alias=True, mode="json")
-        response = self.client.post(url, json=dump)
+        response = self.client.post(url, json=dump, **kwargs)
 
         expected_status_codes = [
             # Resource creation HTTP codes defined at:
@@ -109,6 +114,7 @@ class SCIMClient:
         sort_order: Optional[SortOrder] = None,
         start_index: Optional[int] = None,
         count: Optional[int] = None,
+        **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644
         §3.4.2 <7644#section-3.4.2>`.
@@ -120,6 +126,7 @@ class SCIMClient:
 
         :param resource_type: A :class:`~pydantic_scim2.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
+        :param \\**kwargs: Additional parameters passed to the underlying HTTP request library.
         """
 
         if not id:
@@ -144,7 +151,7 @@ class SCIMClient:
             404,
             500,
         ]
-        response = self.client.get(url)
+        response = self.client.get(url, **kwargs)
         return self.check_response(response, expected_status_codes, expected_type)
 
     def query_all(
@@ -157,12 +164,14 @@ class SCIMClient:
         sort_order: Optional[SortOrder] = None,
         start_index: Optional[int] = None,
         count: Optional[int] = None,
+        **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
         """Perform a GET request to read all available resources, as defined in
         :rfc:`RFC7644 §3.4.2.1 <7644#section-3.4.2.1>`.
 
         :param resource_types: Resource type or union of types expected
-            to be read from the response.
+            to be read from the response. :param \\**kwargs: Additional
+            parameters passed to the underlying HTTP request library.
         """
 
         # A query against a server root indicates that all resources within the
@@ -190,12 +199,12 @@ class SCIMClient:
             response, expected_status_codes, ListResponse[resource_types]
         )
 
-    def delete(self, resource_type: Type, id: str) -> Optional[Error]:
+    def delete(self, resource_type: Type, id: str, **kwargs) -> Optional[Error]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
         <7644#section-3.6>`."""
 
         url = self.resource_endpoint(resource_type) + f"/{id}"
-        response = self.client.delete(url)
+        response = self.client.delete(url, **kwargs)
 
         expected_status_codes = [
             # Resource deletion HTTP codes defined at:
@@ -215,11 +224,13 @@ class SCIMClient:
         ]
         return self.check_response(response, expected_status_codes)
 
-    def replace(self, resource: AnyResource) -> Union[AnyResource, Error]:
+    def replace(self, resource: AnyResource, **kwargs) -> Union[AnyResource, Error]:
         """Perform a PUT request to replace a resource, as defined in
         :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
         :param resource: The new state of the resource to replace.
+            :param \\**kwargs: Additional parameters passed to the
+            underlying HTTP request library.
         """
 
         if not resource.id:
@@ -227,7 +238,7 @@ class SCIMClient:
 
         dump = resource.model_dump(exclude_none=True, by_alias=True, mode="json")
         url = self.resource_endpoint(resource.__class__) + f"/{resource.id}"
-        response = self.client.put(url, json=dump)
+        response = self.client.put(url, json=dump, **kwargs)
 
         expected_status_codes = [
             # Resource querying HTTP codes defined at:
@@ -248,5 +259,7 @@ class SCIMClient:
         ]
         return self.check_response(response, expected_status_codes, resource.__class__)
 
-    def modify(self, resource: AnyResource, op: PatchOp) -> Optional[AnyResource]:
+    def modify(
+        self, resource: AnyResource, op: PatchOp, **kwargs
+    ) -> Optional[AnyResource]:
         raise NotImplementedError()
