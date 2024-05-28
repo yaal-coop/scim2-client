@@ -16,8 +16,6 @@ from httpx_scim_client.client import UnexpectedContentFormat
 from httpx_scim_client.client import UnexpectedContentType
 from httpx_scim_client.client import UnexpectedStatusCode
 
-# TODO: test for codes 400, 501
-
 
 @pytest.fixture
 def httpserver(httpserver):
@@ -46,6 +44,15 @@ def httpserver(httpserver):
             "status": "404",
         },
         status=404,
+    )
+
+    httpserver.expect_request("/Users/bad-request").respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            "detail": "Bad request",
+            "status": "400",
+        },
+        status=400,
     )
 
     httpserver.expect_request("/Users/status-201").respond_with_json(
@@ -289,6 +296,15 @@ def test_no_group(client):
     scim_client = SCIMClient(client)
     response = scim_client.query(Group)
     assert response == ListResponse[Group](total_results=0, resources=None)
+
+
+def test_bad_request(client):
+    """Test querying a resource unkown from the server instantiate an Error
+    object."""
+
+    scim_client = SCIMClient(client)
+    response = scim_client.query(User, "bad-request")
+    assert response == Error(status=400, detail="Bad request")
 
 
 def test_resource_unknown_by_server(client):

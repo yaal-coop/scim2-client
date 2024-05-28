@@ -84,7 +84,6 @@ class SCIMClient:
             403,
             404,
             500,
-            501,
         ]
         return self.check_response(response, expected_status_codes, resource.__class__)
 
@@ -133,7 +132,6 @@ class SCIMClient:
             403,
             404,
             500,
-            501,
         ]
         response = self.client.get(url)
         return self.check_response(response, expected_status_codes, expected_type)

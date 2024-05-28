@@ -145,7 +145,7 @@ def test_no_200(httpserver):
         scim_client.create(user_request)
 
 
-@pytest.mark.parametrize("code", [400, 401, 403, 404, 500, 501])
+@pytest.mark.parametrize("code", [400, 401, 403, 404, 500])
 def test_errors(httpserver, code):
     """Test error cases defined in RFC7644."""
 
