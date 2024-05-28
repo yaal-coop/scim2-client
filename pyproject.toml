@@ -55,6 +55,7 @@ exclude_lines = [
     "@pytest.mark.skip",
     "pragma: no cover",
     "raise NotImplementedError",
+    "\\.\\.\\.\\s*$", # ignore ellipsis
 ]
 
 [tool.ruff.lint]
