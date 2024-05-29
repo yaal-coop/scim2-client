@@ -217,6 +217,56 @@ class SCIMClient:
             response, expected_status_codes, ListResponse[resource_types]
         )
 
+    def search(
+        self,
+        resource_types: Type,
+        search_request: Optional[SearchRequest] = None,
+        **kwargs,
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
+        """Perform a POST search request to read all available resources, as
+        defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
+
+        :param resource_types: Resource type or union of types expected
+            to be read from the response.
+        :param search_request: An object detailing the search query parameters.
+        :param kwargs: Additional parameters passed to the underlying
+            HTTP request library.
+
+        :return:
+            - A :class:`~pydantic_scim2.Error` object in case of error.
+            - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success.
+        """
+
+        payload = (
+            search_request.model_dump(
+                by_alias=True, exclude_none=True, exclude_unset=True, mode="json"
+            )
+            if search_request
+            else None
+        )
+        response = self.client.post("/.search", params=payload)
+
+        expected_status_codes = [
+            # Resource querying HTTP codes defined at:
+            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.3
+            200,
+            # Default HTTP codes defined at:
+            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
+            307,
+            308,
+            400,
+            401,
+            403,
+            404,
+            409,
+            413,
+            500,
+            501,
+        ]
+        return self.check_response(
+            response, expected_status_codes, ListResponse[resource_types]
+        )
+
     def delete(self, resource_type: Type, id: str, **kwargs) -> Optional[Error]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
         <7644#section-3.6>`.
