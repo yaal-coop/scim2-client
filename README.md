@@ -16,12 +16,11 @@ Here is an example of usage:
 ```python
 import datetime
 from httpx impont Client
-from pydantic_scim2 import User
-from pydantic_scim2 import Error
+from pydantic_scim2 import User, EnterpriseUserUser, Group, Error
 from httpx_scim_client import SCIMClient
 
 client = Client(base_url=f"https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-scim = SCIMClient(client)
+scim = SCIMClient(client, resource_types=(User[EnterpriseUser], Group))
 
 # Query resources
 user = scim.query(User, "2819c223-7f76-453a-919d-413861904646")

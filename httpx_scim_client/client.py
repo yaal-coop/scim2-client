@@ -2,6 +2,7 @@ import json
 import json.decoder
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Type
 from typing import Union
 
@@ -27,8 +28,13 @@ BASE_HEADERS = {
 class SCIMClient:
     """An object that perform SCIM requests and validate responses."""
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, resource_types: Optional[Tuple[Type]] = None):
         self.client = client
+        self.resource_types = resource_types or ()
+
+    def check_resource_type(self, resource_type):
+        if resource_type not in self.resource_types:
+            raise ValueError(f"Unknown resource type: '{resource_type}'")
 
     def resource_endpoint(self, resource_type: Type):
         return f"/{resource_type.__name__}s"
@@ -87,6 +93,7 @@ class SCIMClient:
             - The created object as returned by the server in case of success.
         """
 
+        self.check_resource_type(resource.__class__)
         url = self.resource_endpoint(resource.__class__)
         dump = resource.model_dump(exclude_none=True, by_alias=True, mode="json")
         response = self.client.post(url, json=dump, **kwargs)
@@ -132,6 +139,7 @@ class SCIMClient:
             - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
         """
 
+        self.check_resource_type(resource_type)
         payload = (
             search_request.model_dump(
                 by_alias=True, exclude_none=True, exclude_unset=True, mode="json"
@@ -167,15 +175,12 @@ class SCIMClient:
 
     def query_all(
         self,
-        resource_types: Type,
         search_request: Optional[SearchRequest] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
         """Perform a GET request to read all available resources, as defined in
         :rfc:`RFC7644 §3.4.2.1 <7644#section-3.4.2.1>`.
 
-        :param resource_types: Resource type or union of types expected
-            to be read from the response.
         :param search_request: An object detailing the search query parameters.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
@@ -213,13 +218,13 @@ class SCIMClient:
             500,
             501,
         ]
+
         return self.check_response(
-            response, expected_status_codes, ListResponse[resource_types]
+            response, expected_status_codes, ListResponse[Union[self.resource_types]]
         )
 
     def search(
         self,
-        resource_types: Type,
         search_request: Optional[SearchRequest] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
@@ -264,7 +269,7 @@ class SCIMClient:
             501,
         ]
         return self.check_response(
-            response, expected_status_codes, ListResponse[resource_types]
+            response, expected_status_codes, ListResponse[Union[self.resource_types]]
         )
 
     def delete(self, resource_type: Type, id: str, **kwargs) -> Optional[Error]:
@@ -279,6 +284,7 @@ class SCIMClient:
             - :data:`None` in case of success.
         """
 
+        self.check_resource_type(resource_type)
         url = self.resource_endpoint(resource_type) + f"/{id}"
         response = self.client.delete(url, **kwargs)
 
@@ -313,6 +319,7 @@ class SCIMClient:
             - The updated object as returned by the server in case of success.
         """
 
+        self.check_resource_type(resource.__class__)
         if not resource.id:
             raise Exception("Resource must have an id")
 

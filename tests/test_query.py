@@ -1,5 +1,4 @@
 import datetime
-from typing import Union
 
 import pytest
 from httpx import Client
@@ -221,7 +220,13 @@ def test_user_with_valid_id(client):
     """Test that querying an existing user with an id correctly instantiate an
     User object."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     response = scim_client.query(User, "2819c223-7f76-453a-919d-413861904646")
     assert response == User(
         id="2819c223-7f76-453a-919d-413861904646",
@@ -244,7 +249,13 @@ def test_user_with_invalid_id(client):
     """Test that querying an user with an invalid id instantiate an Error
     object."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     response = scim_client.query(User, "unknown")
     assert response == Error(detail="Resource unknown not found", status=404)
 
@@ -253,7 +264,13 @@ def test_all_users(client):
     """Test that querying all existing users instantiate a ListResponse
     object."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     response = scim_client.query(User)
     assert response == ListResponse[User](
         total_results=2,
@@ -292,10 +309,16 @@ def test_all_users(client):
     )
 
 
-def test_no_group(client):
+def test_no_result(client):
     """Test querying a resource with no object."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     response = scim_client.query(Group)
     assert response == ListResponse[Group](total_results=0, resources=None)
 
@@ -304,7 +327,13 @@ def test_bad_request(client):
     """Test querying a resource unkown from the server instantiate an Error
     object."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     response = scim_client.query(User, "bad-request")
     assert response == Error(status=400, detail="Bad request")
 
@@ -316,7 +345,7 @@ def test_resource_unknown_by_server(client):
     class Foobar(Resource):
         pass
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(Foobar,))
     response = scim_client.query(Foobar)
     assert response == Error(status=404, detail="Invalid Resource")
 
@@ -325,7 +354,7 @@ def test_bad_resource_type(client):
     """Test querying a resource unkown from the client raise a
     ValidationError."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(ValidationError):
         scim_client.query(User, "its-a-group")
 
@@ -334,8 +363,14 @@ def test_all(client):
     """Test querying all resources from the server instation a ListResponse
     object."""
 
-    scim_client = SCIMClient(client)
-    response = scim_client.query_all(Union[User, Group])
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
+    response = scim_client.query_all()
     assert isinstance(response, ListResponse)
     assert response.total_results == 2
     user, group = response.resources
@@ -347,15 +382,21 @@ def test_all_unexpected_type(client):
     """Test retrieving a payload for an object which type has not been passed
     in parameters raise a ValidationError."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(ValidationError):
-        scim_client.query_all(User)
+        scim_client.query_all()
 
 
 def test_response_is_not_json(client):
     """Test sitations where servers return an invalid JSON object."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     with pytest.raises(UnexpectedContentFormat):
         scim_client.query(User, "not-json")
 
@@ -363,7 +404,13 @@ def test_response_is_not_json(client):
 def test_response_bad_status_code(client):
     """Test sitations where servers return an invalid status code."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     with pytest.raises(UnexpectedStatusCode):
         scim_client.query(User, "status-201")
 
@@ -371,7 +418,13 @@ def test_response_bad_status_code(client):
 def test_response_bad_content_type(client):
     """Test sitations where servers return an invalid content-type response."""
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     with pytest.raises(UnexpectedContentType):
         scim_client.query(User, "bad-content-type")
 
@@ -406,7 +459,23 @@ def test_search_request(httpserver, client):
         count=10,
     )
 
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
     response = scim_client.query(User, "with-qs", req)
     assert isinstance(response, User)
     assert response.id == "with-qs"
+
+
+def test_invalid_resource_type(httpserver):
+    """Test that resource_types passed to the method must be part of
+    SCIMClient.resource_types."""
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(ValueError, match=r"Unknown resource type"):
+        scim_client.query(Group)

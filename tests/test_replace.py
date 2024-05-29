@@ -3,6 +3,7 @@ import datetime
 import pytest
 from httpx import Client
 from pydantic_scim2 import Error
+from pydantic_scim2 import Group
 from pydantic_scim2 import Meta
 from pydantic_scim2 import User
 
@@ -48,7 +49,7 @@ def test_replace_user(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.replace(user)
     assert response == user
 
@@ -86,7 +87,7 @@ def test_errors(httpserver, code):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.replace(user_request)
 
     assert response == Error(
@@ -134,6 +135,16 @@ def test_user_with_no_id(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(Exception, match="Resource must have an id"):
         scim_client.replace(user)
+
+
+def test_invalid_resource_type(httpserver):
+    """Test that resource_types passed to the method must be part of
+    SCIMClient.resource_types."""
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(ValueError, match=r"Unknown resource type"):
+        scim_client.replace(Group(display_name="foobar"))

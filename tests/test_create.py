@@ -3,6 +3,7 @@ import datetime
 import pytest
 from httpx import Client
 from pydantic_scim2 import Error
+from pydantic_scim2 import Group
 from pydantic_scim2 import Meta
 from pydantic_scim2 import User
 
@@ -45,7 +46,7 @@ def test_create_user(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request)
 
     user_created = User(
@@ -95,7 +96,7 @@ def test_conflict(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request)
     assert response == Error(
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
@@ -140,7 +141,7 @@ def test_no_200(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(UnexpectedStatusCode):
         scim_client.create(user_request)
 
@@ -174,7 +175,7 @@ def test_errors(httpserver, code):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
+    scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request)
 
     assert response == Error(
@@ -182,3 +183,13 @@ def test_errors(httpserver, code):
         status=code,
         detail=f"{code} error",
     )
+
+
+def test_invalid_resource_type(httpserver):
+    """Test that resource_types passed to the method must be part of
+    SCIMClient.resource_types."""
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(ValueError, match=r"Unknown resource type"):
+        scim_client.create(Group(display_name="foobar"))

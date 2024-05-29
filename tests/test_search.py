@@ -3,6 +3,7 @@ import datetime
 import pytest
 from httpx import Client
 from pydantic_scim2 import Error
+from pydantic_scim2 import Group
 from pydantic_scim2 import ListResponse
 from pydantic_scim2 import Meta
 from pydantic_scim2 import SearchRequest
@@ -50,8 +51,14 @@ def test_all_objects(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
-    response = scim_client.search(User)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
+    response = scim_client.search()
     assert response == ListResponse[User](
         total_results=2,
         resources=[
@@ -126,8 +133,14 @@ def test_search_request(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
-    response = scim_client.search(User, req)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
+    response = scim_client.search(req)
     user = response.resources[0]
     assert isinstance(user, User)
     assert user.id == "2819c223-7f76-453a-919d-413861904646"
@@ -147,8 +160,14 @@ def test_errors(httpserver, code):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client)
-    response = scim_client.search(User)
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
+    response = scim_client.search()
 
     assert response == Error(
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
