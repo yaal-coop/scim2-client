@@ -17,7 +17,7 @@ Here is an example of usage:
 
 ```python
 import datetime
-from httpx impont Client
+from httpx import Client
 from scim2_models import User, EnterpriseUserUser, Group, Error
 from scim2_client import SCIMClient
 
