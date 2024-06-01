@@ -9,11 +9,11 @@ from typing import Union
 from httpx import Client
 from httpx import Response
 from pydantic import ValidationError
-from pydantic_scim2 import AnyResource
-from pydantic_scim2 import Error
-from pydantic_scim2 import ListResponse
-from pydantic_scim2 import PatchOp
-from pydantic_scim2 import SearchRequest
+from scim2_models import AnyResource
+from scim2_models import Error
+from scim2_models import ListResponse
+from scim2_models import PatchOp
+from scim2_models import SearchRequest
 
 from .errors import UnexpectedContentFormat
 from .errors import UnexpectedContentType
@@ -89,7 +89,7 @@ class SCIMClient:
             library.
 
         :return:
-            - An :class:`~pydantic_scim2.Error` object in case of error.
+            - An :class:`~scim2_models.Error` object in case of error.
             - The created object as returned by the server in case of success.
         """
 
@@ -128,15 +128,15 @@ class SCIMClient:
         - If `id` is not :data:`None`, the resource with the exact id will be reached.
         - If `id` is :data:`None`, all the resources with the given type will be reached.
 
-        :param resource_type: A :class:`~pydantic_scim2.Resource` subtype or :data:`None`
+        :param resource_type: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
-            - A :class:`~pydantic_scim2.Error` object in case of error.
+            - A :class:`~scim2_models.Error` object in case of error.
             - A `resource_type` object in case of success if `id` is not :data:`None`
-            - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
+            - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
         """
 
         self.check_resource_type(resource_type)
@@ -186,8 +186,8 @@ class SCIMClient:
             HTTP request library.
 
         :return:
-            - A :class:`~pydantic_scim2.Error` object in case of error.
-            - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success.
+            - A :class:`~scim2_models.Error` object in case of error.
+            - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
         """
 
         # A query against a server root indicates that all resources within the
@@ -238,8 +238,8 @@ class SCIMClient:
             HTTP request library.
 
         :return:
-            - A :class:`~pydantic_scim2.Error` object in case of error.
-            - A :class:`~pydantic_scim2.ListResponse[resource_type]` object in case of success.
+            - A :class:`~scim2_models.Error` object in case of error.
+            - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
         """
 
         payload = (
@@ -280,7 +280,7 @@ class SCIMClient:
             HTTP request library.
 
         :return:
-            - A :class:`~pydantic_scim2.Error` object in case of error.
+            - A :class:`~scim2_models.Error` object in case of error.
             - :data:`None` in case of success.
         """
 
@@ -315,7 +315,7 @@ class SCIMClient:
             HTTP request library.
 
         :return:
-            - An :class:`~pydantic_scim2.Error` object in case of error.
+            - An :class:`~scim2_models.Error` object in case of error.
             - The updated object as returned by the server in case of success.
         """
 

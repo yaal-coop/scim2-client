@@ -3,14 +3,14 @@ import datetime
 import pytest
 from httpx import Client
 from pydantic import ValidationError
-from pydantic_scim2 import Error
-from pydantic_scim2 import Group
-from pydantic_scim2 import ListResponse
-from pydantic_scim2 import Meta
-from pydantic_scim2 import Resource
-from pydantic_scim2 import SearchRequest
-from pydantic_scim2 import SortOrder
-from pydantic_scim2 import User
+from scim2_models import Error
+from scim2_models import Group
+from scim2_models import ListResponse
+from scim2_models import Meta
+from scim2_models import Resource
+from scim2_models import SearchRequest
+from scim2_models import SortOrder
+from scim2_models import User
 
 from scim2_client import SCIMClient
 from scim2_client.client import UnexpectedContentFormat

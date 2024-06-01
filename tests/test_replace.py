@@ -2,10 +2,10 @@ import datetime
 
 import pytest
 from httpx import Client
-from pydantic_scim2 import Error
-from pydantic_scim2 import Group
-from pydantic_scim2 import Meta
-from pydantic_scim2 import User
+from scim2_models import Error
+from scim2_models import Group
+from scim2_models import Meta
+from scim2_models import User
 
 from scim2_client import SCIMClient
 

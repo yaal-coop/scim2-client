@@ -40,7 +40,7 @@ toctree_collapse = False
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "pydantic_scim2": ("https://pydantic-scim2.readthedocs.io/en/latest/", None),
+    "scim2_models": ("https://scim2-models.readthedocs.io/en/latest/", None),
 }
 
 # -- Options for HTML output ----------------------------------------------
@@ -54,25 +54,7 @@ html_theme_options = {
     "github_url": "https://github.com/yaal-coop/scim2-client",
     "mastodon_url": "https://toot.aquilenet.fr/@yaal",
     "nav_links": [
-        {
-            "title": "SCIM",
-            "url": "https://simplecloud.info/",
-            "children": [
-                {
-                    "title": "RFC7642 - SCIM: Definitions, Overview, Concepts, and Requirements",
-                    "url": "https://tools.ietf.org/html/rfc7642",
-                },
-                {
-                    "title": "RFC7643 - SCIM: Core Schema",
-                    "url": "https://tools.ietf.org/html/rfc7643",
-                },
-                {
-                    "title": "RFC7644 - SCIM: Protocol",
-                    "url": "https://tools.ietf.org/html/rfc7644",
-                },
-            ],
-        },
-        {"title": "pydantic-scim2", "url": "https://pydantic-scim2.readthedocs.io"},
+        {"title": "scim2-models", "url": "https://scim2-models.readthedocs.io"},
         {
             "title": "scim-cli",
             "url": "https://scim-cli.readthedocs.io",

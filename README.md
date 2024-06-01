@@ -1,6 +1,6 @@
 # scim2-client
 
-A SCIM client library built upon [pydantic-scim2](https://pydantic-scim2.readthedocs.io), that pythonically build requests and parse responses, following the [RFC7643](https://datatracker.ietf.org/doc/html/rfc7643.html) and [RFC7644](https://datatracker.ietf.org/doc/html/rfc7644.html) specifications.
+A SCIM client library built upon [scim2-models](https://scim2-models.readthedocs.io), that pythonically build requests and parse responses, following the [RFC7643](https://datatracker.ietf.org/doc/html/rfc7643.html) and [RFC7644](https://datatracker.ietf.org/doc/html/rfc7644.html) specifications.
 ## Installation
 
 ```shell
@@ -16,7 +16,7 @@ Here is an example of usage:
 ```python
 import datetime
 from httpx impont Client
-from pydantic_scim2 import User, EnterpriseUserUser, Group, Error
+from scim2_models import User, EnterpriseUserUser, Group, Error
 from scim2_client import SCIMClient
 
 client = Client(base_url=f"https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
