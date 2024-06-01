@@ -56,8 +56,8 @@ html_theme_options = {
     "nav_links": [
         {"title": "scim2-models", "url": "https://scim2-models.readthedocs.io"},
         {
-            "title": "scim-cli",
-            "url": "https://scim-cli.readthedocs.io",
+            "title": "scim2-cli",
+            "url": "https://scim2-cli.readthedocs.io",
         },
     ],
 }

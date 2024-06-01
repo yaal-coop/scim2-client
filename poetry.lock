@@ -896,13 +896,13 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "scim2-models"
-version = "0.1.0"
+version = "0.1.1"
 description = "SCIM2 models serialization and validation with pydantic"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "scim2_models-0.1.0-py3-none-any.whl", hash = "sha256:9ad7eabd92d2159ff8fec18fb0172b2ce6c1bac5a70d012c1081cb663f9f1d9c"},
-    {file = "scim2_models-0.1.0.tar.gz", hash = "sha256:c40bb871120e5d8bf4f02f8c2247803fb372e7476702e17c8d89a5e39cb09142"},
+    {file = "scim2_models-0.1.1-py3-none-any.whl", hash = "sha256:352d3ef3e11f80b82b6943cdba4443b51d1fcb55229e95a75bae486164c4580c"},
+    {file = "scim2_models-0.1.1.tar.gz", hash = "sha256:9004bebffc0616980e029b35c3457323b0231fed89bd832716f32a3c319a7295"},
 ]
 
 [package.dependencies]
@@ -1148,4 +1148,4 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-it
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "9b6009200785759c95cbd78a3196c7a772c341c6e8cffd8416912dc41cf1b848"
+content-hash = "bd198cd8e3c667c087db231c43ac79500dffb944dd44b6c129c9949689150d36"

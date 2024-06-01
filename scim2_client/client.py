@@ -10,6 +10,7 @@ from httpx import Client
 from httpx import Response
 from pydantic import ValidationError
 from scim2_models import AnyResource
+from scim2_models import Context
 from scim2_models import Error
 from scim2_models import ListResponse
 from scim2_models import PatchOp
@@ -44,6 +45,7 @@ class SCIMClient:
         response: Response,
         expected_status_codes: List[int],
         expected_type: Optional[Type] = None,
+        scim_ctx: Optional[Context] = None,
     ):
         if response.status_code not in expected_status_codes:
             raise UnexpectedStatusCode(response)
@@ -77,7 +79,8 @@ class SCIMClient:
             pass
 
         if expected_type:
-            return expected_type.model_validate(response_payload)
+            return expected_type.model_validate(response_payload, scim_ctx=scim_ctx)
+
         return response_payload
 
     def create(self, resource: AnyResource, **kwargs) -> Union[AnyResource, Error]:
@@ -95,7 +98,7 @@ class SCIMClient:
 
         self.check_resource_type(resource.__class__)
         url = self.resource_endpoint(resource.__class__)
-        dump = resource.model_dump(exclude_none=True, by_alias=True, mode="json")
+        dump = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
         response = self.client.post(url, json=dump, **kwargs)
 
         expected_status_codes = [
@@ -113,7 +116,12 @@ class SCIMClient:
             404,
             500,
         ]
-        return self.check_response(response, expected_status_codes, resource.__class__)
+        return self.check_response(
+            response,
+            expected_status_codes,
+            resource.__class__,
+            scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
+        )
 
     def query(
         self,
@@ -142,7 +150,7 @@ class SCIMClient:
         self.check_resource_type(resource_type)
         payload = (
             search_request.model_dump(
-                by_alias=True, exclude_none=True, exclude_unset=True, mode="json"
+                exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_REQUEST
             )
             if search_request
             else None
@@ -171,7 +179,12 @@ class SCIMClient:
             500,
         ]
         response = self.client.get(url, params=payload, **kwargs)
-        return self.check_response(response, expected_status_codes, expected_type)
+        return self.check_response(
+            response,
+            expected_status_codes,
+            expected_type,
+            scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
+        )
 
     def query_all(
         self,
@@ -196,7 +209,7 @@ class SCIMClient:
 
         payload = (
             search_request.model_dump(
-                by_alias=True, exclude_none=True, exclude_unset=True, mode="json"
+                exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_REQUEST
             )
             if search_request
             else None
@@ -220,7 +233,10 @@ class SCIMClient:
         ]
 
         return self.check_response(
-            response, expected_status_codes, ListResponse[Union[self.resource_types]]
+            response,
+            expected_status_codes,
+            ListResponse[Union[self.resource_types]],
+            scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
     def search(
@@ -244,7 +260,7 @@ class SCIMClient:
 
         payload = (
             search_request.model_dump(
-                by_alias=True, exclude_none=True, exclude_unset=True, mode="json"
+                exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_RESPONSE
             )
             if search_request
             else None
@@ -269,7 +285,10 @@ class SCIMClient:
             501,
         ]
         return self.check_response(
-            response, expected_status_codes, ListResponse[Union[self.resource_types]]
+            response,
+            expected_status_codes,
+            ListResponse[Union[self.resource_types]],
+            scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
     def delete(self, resource_type: Type, id: str, **kwargs) -> Optional[Error]:
@@ -323,7 +342,7 @@ class SCIMClient:
         if not resource.id:
             raise Exception("Resource must have an id")
 
-        dump = resource.model_dump(exclude_none=True, by_alias=True, mode="json")
+        dump = resource.model_dump(scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST)
         url = self.resource_endpoint(resource.__class__) + f"/{resource.id}"
         response = self.client.put(url, json=dump, **kwargs)
 
@@ -344,7 +363,12 @@ class SCIMClient:
             500,
             501,
         ]
-        return self.check_response(response, expected_status_codes, resource.__class__)
+        return self.check_response(
+            response,
+            expected_status_codes,
+            resource.__class__,
+            scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
+        )
 
     def modify(
         self, resource: AnyResource, op: PatchOp, **kwargs
