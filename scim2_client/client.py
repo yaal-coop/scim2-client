@@ -152,8 +152,6 @@ class SCIMClient:
             search_request.model_dump(
                 exclude_unset=True,
                 scim_ctx=Context.RESOURCE_QUERY_REQUEST,
-                attributes=search_request.attributes,
-                excluded_attributes=search_request.excluded_attributes,
             )
             if search_request
             else None
