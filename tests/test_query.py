@@ -12,10 +12,10 @@ from pydantic_scim2 import SearchRequest
 from pydantic_scim2 import SortOrder
 from pydantic_scim2 import User
 
-from httpx_scim_client import SCIMClient
-from httpx_scim_client.client import UnexpectedContentFormat
-from httpx_scim_client.client import UnexpectedContentType
-from httpx_scim_client.client import UnexpectedStatusCode
+from scim2_client import SCIMClient
+from scim2_client.client import UnexpectedContentFormat
+from scim2_client.client import UnexpectedContentType
+from scim2_client.client import UnexpectedStatusCode
 
 
 @pytest.fixture

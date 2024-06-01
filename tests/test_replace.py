@@ -7,7 +7,7 @@ from pydantic_scim2 import Group
 from pydantic_scim2 import Meta
 from pydantic_scim2 import User
 
-from httpx_scim_client import SCIMClient
+from scim2_client import SCIMClient
 
 
 def test_replace_user(httpserver):

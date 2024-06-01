@@ -7,8 +7,8 @@ from pydantic_scim2 import Group
 from pydantic_scim2 import Meta
 from pydantic_scim2 import User
 
-from httpx_scim_client import SCIMClient
-from httpx_scim_client import UnexpectedStatusCode
+from scim2_client import SCIMClient
+from scim2_client import UnexpectedStatusCode
 
 
 def test_create_user(httpserver):

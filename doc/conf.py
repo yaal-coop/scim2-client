@@ -4,7 +4,7 @@ import sys
 from importlib import metadata
 
 sys.path.insert(0, os.path.abspath(".."))
-sys.path.insert(0, os.path.abspath("../httpx_scim_client"))
+sys.path.insert(0, os.path.abspath("../scim2_client"))
 
 # -- General configuration ------------------------------------------------
 
@@ -21,7 +21,7 @@ extensions = [
 
 templates_path = ["_templates"]
 master_doc = "index"
-project = "httpx-scim-client"
+project = "scim2-client"
 year = datetime.datetime.now().strftime("%Y")
 copyright = f"{year}, Yaal Coop"
 author = "Yaal Coop"
@@ -31,7 +31,7 @@ source_suffix = {
     ".md": "markdown",
 }
 
-version = metadata.version("httpx_scim_client")
+version = metadata.version("scim2_client")
 language = "en"
 exclude_patterns = []
 pygments_style = "sphinx"
@@ -47,11 +47,11 @@ intersphinx_mapping = {
 
 html_theme = "shibuya"
 # html_static_path = ["_static"]
-html_baseurl = "https://httpx-scim-client.readthedocs.io"
+html_baseurl = "https://scim2-client.readthedocs.io"
 html_theme_options = {
     "globaltoc_expand_depth": 2,
     "accent_color": "lime",
-    "github_url": "https://github.com/yaal-coop/httpx-scim-client",
+    "github_url": "https://github.com/yaal-coop/scim2-client",
     "mastodon_url": "https://toot.aquilenet.fr/@yaal",
     "nav_links": [
         {
@@ -82,7 +82,7 @@ html_theme_options = {
 html_context = {
     "source_type": "github",
     "source_user": "yaal-coop",
-    "source_repo": "httpx-scim-client",
+    "source_repo": "scim2-client",
     "source_version": "main",
     "source_docs_path": "/doc/",
 }

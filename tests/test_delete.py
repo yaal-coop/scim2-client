@@ -4,7 +4,7 @@ from pydantic_scim2 import Error
 from pydantic_scim2 import Group
 from pydantic_scim2 import User
 
-from httpx_scim_client import SCIMClient
+from scim2_client import SCIMClient
 
 
 def test_delete_user(httpserver):

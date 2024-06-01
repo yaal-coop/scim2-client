@@ -1,5 +1,5 @@
 Reference
 =========
 
-.. automodule:: httpx_scim_client
+.. automodule:: scim2_client
    :members:

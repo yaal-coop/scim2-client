@@ -3,7 +3,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "httpx-scim-client"
+name = "scim2-client"
 version = "0.1.0"
 description = "Pythonically build SCIM requests and parse SCIM responses"
 authors = ["Yaal Coop <contact@yaal.coop>"]
@@ -44,7 +44,7 @@ myst-parser = "^3.0.1"
 
 [tool.coverage.run]
 source = [
-    "httpx_scim_client",
+    "scim2_client",
     "tests",
 ]
 omit = [".tox/*"]

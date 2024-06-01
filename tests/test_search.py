@@ -10,7 +10,7 @@ from pydantic_scim2 import SearchRequest
 from pydantic_scim2 import SortOrder
 from pydantic_scim2 import User
 
-from httpx_scim_client import SCIMClient
+from scim2_client import SCIMClient
 
 
 def test_all_objects(httpserver):
