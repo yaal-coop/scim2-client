@@ -1,6 +1,6 @@
 # scim2-client
 
-A SCIM client library built upon [scim2-models](https://scim2-models.readthedocs.io) and [httpx](https://github.com/encode/httpx),
+A SCIM client Python library built upon [scim2-models](https://scim2-models.readthedocs.io) and [httpx](https://github.com/encode/httpx),
 that pythonically build requests and parse responses,
 following the [RFC7643](https://datatracker.ietf.org/doc/html/rfc7643.html) and [RFC7644](https://datatracker.ietf.org/doc/html/rfc7644.html) specifications.
 ## Installation
