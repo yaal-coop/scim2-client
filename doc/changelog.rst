@@ -1,6 +1,9 @@
 Changelog
 =========
 
+[0.1.2] - 2024-06-02
+--------------------
+
 Added
 ^^^^^
 - :code:`check_response_payload` and :code:`check_status_code` parameters for all methods.
