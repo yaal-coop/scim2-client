@@ -106,7 +106,12 @@ class SCIMClient:
             raise ValueError(f"Unknown resource type: '{resource_type}'")
 
     def resource_endpoint(self, resource_type: Type):
-        return f"/{resource_type.__name__}s"
+        try:
+            first_bracket_index = resource_type.__name__.index("[")
+            root_name = resource_type.__name__[:first_bracket_index]
+        except ValueError:
+            root_name = resource_type.__name__
+        return f"/{root_name}s"
 
     def check_response(
         self,
