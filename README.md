@@ -40,7 +40,8 @@ assert user.meta.last_updated == datetime.datetime(
 )
 
 # Create resources
-response = scim.create(User, "2819c223-7f76-453a-919d-413861904646")
+payload = User(user_name="bjensen@example.com")
+response = scim.create(user)
 assert isinstance(response, Error)
 assert response.detail == "One or more of the attribute values are already in use or are reserved."
 ```
