@@ -76,6 +76,10 @@ def httpserver(httpserver):
         "foobar", status=200, content_type="application/scim+json"
     )
 
+    httpserver.expect_request("/Users/not-a-scim-object").respond_with_json(
+        {"foo": "bar"}, status=200, content_type="application/scim+json"
+    )
+
     httpserver.expect_request("/Users/bad-content-type").respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -401,6 +405,20 @@ def test_response_is_not_json(client):
         scim_client.query(User, "not-json")
 
 
+def test_dont_check_response(httpserver, client):
+    """Test the check_response_payload_attribute."""
+
+    httpserver.expect_request(
+        "/Users/not-a-scim-object", method="GET"
+    ).respond_with_json({"foo": "bar"}, status=200)
+
+    scim_client = SCIMClient(client, resource_types=(User,))
+    response = scim_client.query(
+        User, "not-a-scim-object", check_response_payload=False
+    )
+    assert response == {"foo": "bar"}
+
+
 def test_response_bad_status_code(client):
     """Test sitations where servers return an invalid status code."""
 
@@ -413,6 +431,7 @@ def test_response_bad_status_code(client):
     )
     with pytest.raises(UnexpectedStatusCode):
         scim_client.query(User, "status-201")
+    scim_client.query(User, "status-201", check_status_code=False)
 
 
 def test_response_bad_content_type(client):

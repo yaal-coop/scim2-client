@@ -146,6 +146,35 @@ def test_search_request(httpserver):
     assert user.id == "2819c223-7f76-453a-919d-413861904646"
 
 
+def test_dont_check_response(httpserver):
+    """Test the check_response_payload_attribute."""
+
+    httpserver.expect_request("/.search", method="POST").respond_with_json(
+        {"foo": "bar"}, status=200
+    )
+
+    req = SearchRequest(
+        attributes=["userName", "displayName"],
+        excluded_attributes=["timezone", "phoneNumbers"],
+        filter='userName Eq "john"',
+        sort_by="userName",
+        sort_order=SortOrder.ascending,
+        start_index=1,
+        count=10,
+    )
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
+    response = scim_client.search(req, check_response_payload=False)
+    assert response == {"foo": "bar"}
+
+
 @pytest.mark.parametrize("code", [400, 401, 403, 404, 409, 413, 500, 501])
 def test_errors(httpserver, code):
     """Test error cases defined in RFC7644."""

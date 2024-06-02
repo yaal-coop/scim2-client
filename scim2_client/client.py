@@ -1,5 +1,6 @@
 import json
 import json.decoder
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -29,6 +30,71 @@ BASE_HEADERS = {
 class SCIMClient:
     """An object that perform SCIM requests and validate responses."""
 
+    CREATION_RESPONSE_STATUS_CODES: List[int] = [
+        201,
+        409,
+        307,
+        308,
+        400,
+        401,
+        403,
+        404,
+        500,
+    ]
+    """Resource creation HTTP codes defined at :rfc:`RFC7644 §3.3
+    <7644#section-3.3>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+
+    QUERY_RESPONSE_STATUS_CODES: List[int] = [200, 400, 307, 308, 401, 403, 404, 500]
+    """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.2
+    <7644#section-3.4.2>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+
+    SEARCH_RESPONSE_STATUS_CODES: List[int] = [
+        200,
+        307,
+        308,
+        400,
+        401,
+        403,
+        404,
+        409,
+        413,
+        500,
+        501,
+    ]
+    """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.3
+    <7644#section-3.4.3>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+
+    DELETION_RESPONSE_STATUS_CODES: List[int] = [
+        204,
+        307,
+        308,
+        400,
+        401,
+        403,
+        404,
+        412,
+        500,
+        501,
+    ]
+    """Resource deletion HTTP codes defined at :rfc:`RFC7644 §3.6
+    <7644#section-3.6>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+
+    REPLACEMENT_RESPONSE_STATUS_CODES: List[int] = [
+        200,
+        307,
+        308,
+        400,
+        401,
+        403,
+        404,
+        409,
+        412,
+        500,
+        501,
+    ]
+    """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.2
+    <7644#section-3.4.2>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+
     def __init__(self, client: Client, resource_types: Optional[Tuple[Type]] = None):
         self.client = client
         self.resource_types = resource_types or ()
@@ -47,7 +113,7 @@ class SCIMClient:
         expected_type: Optional[Type] = None,
         scim_ctx: Optional[Context] = None,
     ):
-        if response.status_code not in expected_status_codes:
+        if expected_status_codes and response.status_code not in expected_status_codes:
             raise UnexpectedStatusCode(response)
 
         # Interoperability considerations:  The "application/scim+json" media
@@ -64,7 +130,8 @@ class SCIMClient:
         # the errors in the body of the response in a JSON format
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
 
-        if response.status_code in (204, 205):
+        no_content_status_codes = [204, 205]
+        if response.status_code in no_content_status_codes:
             response_payload = None
 
         else:
@@ -79,15 +146,28 @@ class SCIMClient:
             pass
 
         if expected_type:
-            return expected_type.model_validate(response_payload, scim_ctx=scim_ctx)
+            try:
+                return expected_type.model_validate(response_payload, scim_ctx=scim_ctx)
+            except ValidationError as exc:
+                exc.response_payload = response_payload
+                raise exc
 
         return response_payload
 
-    def create(self, resource: AnyResource, **kwargs) -> Union[AnyResource, Error]:
+    def create(
+        self,
+        resource: AnyResource,
+        check_response_payload: bool = True,
+        check_status_code: bool = True,
+        **kwargs,
+    ) -> Union[AnyResource, Error, Dict]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
         <7644#section-3.3>`.
 
         :param resource: The resource to create
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying HTTP request
             library.
 
@@ -101,25 +181,10 @@ class SCIMClient:
         dump = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
         response = self.client.post(url, json=dump, **kwargs)
 
-        expected_status_codes = [
-            # Resource creation HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.3
-            201,
-            409,
-            # Default HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
-            307,
-            308,
-            400,
-            401,
-            403,
-            404,
-            500,
-        ]
         return self.check_response(
             response,
-            expected_status_codes,
-            resource.__class__,
+            self.CREATION_RESPONSE_STATUS_CODES if check_status_code else None,
+            resource.__class__ if check_response_payload else None,
             scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
         )
 
@@ -128,8 +193,10 @@ class SCIMClient:
         resource_type: Type,
         id: Optional[str] = None,
         search_request: Optional[SearchRequest] = None,
+        check_response_payload: bool = True,
+        check_status_code: bool = True,
         **kwargs,
-    ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644
         §3.4.2 <7644#section-3.4.2>`.
 
@@ -139,6 +206,9 @@ class SCIMClient:
         :param resource_type: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
@@ -165,37 +235,28 @@ class SCIMClient:
             expected_type = resource_type
             url = self.resource_endpoint(resource_type) + f"/{id}"
 
-        expected_status_codes = [
-            # Resource querying HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2
-            200,
-            400,
-            # Default HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
-            307,
-            308,
-            401,
-            403,
-            404,
-            500,
-        ]
         response = self.client.get(url, params=payload, **kwargs)
         return self.check_response(
             response,
-            expected_status_codes,
-            expected_type,
+            self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None,
+            expected_type if check_response_payload else None,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
     def query_all(
         self,
         search_request: Optional[SearchRequest] = None,
+        check_response_payload: bool = True,
+        check_status_code: bool = True,
         **kwargs,
-    ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
         """Perform a GET request to read all available resources, as defined in
         :rfc:`RFC7644 §3.4.2.1 <7644#section-3.4.2.1>`.
 
         :param search_request: An object detailing the search query parameters.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -217,40 +278,31 @@ class SCIMClient:
         )
         response = self.client.get("/", params=payload)
 
-        expected_status_codes = [
-            # Resource querying HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2
-            200,
-            400,
-            # Default HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
-            307,
-            308,
-            401,
-            403,
-            404,
-            500,
-            501,
-        ]
-
         return self.check_response(
             response,
-            expected_status_codes,
-            ListResponse[Union[self.resource_types]],
+            self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None,
+            ListResponse[Union[self.resource_types]]
+            if check_response_payload
+            else None,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
     def search(
         self,
         search_request: Optional[SearchRequest] = None,
+        check_response_payload: bool = True,
+        check_status_code: bool = True,
         **kwargs,
-    ) -> Union[AnyResource, ListResponse[AnyResource], Error]:
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
         """Perform a POST search request to read all available resources, as
         defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
 
         :param resource_types: Resource type or union of types expected
             to be read from the response.
         :param search_request: An object detailing the search query parameters.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -268,34 +320,22 @@ class SCIMClient:
         )
         response = self.client.post("/.search", params=payload)
 
-        expected_status_codes = [
-            # Resource querying HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.3
-            200,
-            # Default HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
-            307,
-            308,
-            400,
-            401,
-            403,
-            404,
-            409,
-            413,
-            500,
-            501,
-        ]
         return self.check_response(
             response,
-            expected_status_codes,
-            ListResponse[Union[self.resource_types]],
+            self.SEARCH_RESPONSE_STATUS_CODES if check_status_code else None,
+            ListResponse[Union[self.resource_types]]
+            if check_response_payload
+            else None,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
-    def delete(self, resource_type: Type, id: str, **kwargs) -> Optional[Error]:
+    def delete(
+        self, resource_type: Type, id: str, check_status_code: bool = True, **kwargs
+    ) -> Optional[Union[Error, Dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
         <7644#section-3.6>`.
 
+        :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -308,29 +348,24 @@ class SCIMClient:
         url = self.resource_endpoint(resource_type) + f"/{id}"
         response = self.client.delete(url, **kwargs)
 
-        expected_status_codes = [
-            # Resource deletion HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.6
-            204,
-            # Default HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
-            307,
-            308,
-            400,
-            401,
-            403,
-            404,
-            412,
-            500,
-            501,
-        ]
-        return self.check_response(response, expected_status_codes)
+        return self.check_response(
+            response, self.DELETION_RESPONSE_STATUS_CODES if check_status_code else None
+        )
 
-    def replace(self, resource: AnyResource, **kwargs) -> Union[AnyResource, Error]:
+    def replace(
+        self,
+        resource: AnyResource,
+        check_response_payload: bool = True,
+        check_status_code: bool = True,
+        **kwargs,
+    ) -> Union[AnyResource, Error, Dict]:
         """Perform a PUT request to replace a resource, as defined in
         :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
         :param resource: The new state of the resource to replace.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -347,31 +382,14 @@ class SCIMClient:
         url = self.resource_endpoint(resource.__class__) + f"/{resource.id}"
         response = self.client.put(url, json=dump, **kwargs)
 
-        expected_status_codes = [
-            # Resource querying HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644#section-3.4.2
-            200,
-            # Default HTTP codes defined at:
-            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
-            307,
-            308,
-            400,
-            401,
-            403,
-            404,
-            409,
-            412,
-            500,
-            501,
-        ]
         return self.check_response(
             response,
-            expected_status_codes,
-            resource.__class__,
+            self.REPLACEMENT_RESPONSE_STATUS_CODES if check_status_code else None,
+            resource.__class__ if check_response_payload else None,
             scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
         )
 
     def modify(
         self, resource: AnyResource, op: PatchOp, **kwargs
-    ) -> Optional[AnyResource]:
+    ) -> Optional[Union[AnyResource, Dict]]:
         raise NotImplementedError()
