@@ -8,6 +8,7 @@ from scim2_models import Meta
 from scim2_models import User
 
 from scim2_client import SCIMClient
+from scim2_client import SCIMClientError
 from scim2_client import UnexpectedStatusCode
 
 
@@ -52,6 +53,85 @@ def test_create_user(httpserver):
         ),
     )
     assert response == user_created
+
+
+def test_create_dict_user(httpserver):
+    """Nominal case for a User creation object, when passing a dict instead of
+    a resource."""
+
+    httpserver.expect_request("/Users", method="POST").respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "id": "2819c223-7f76-453a-919d-413861904646",
+            "userName": "bjensen@example.com",
+            "meta": {
+                "resourceType": "User",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff590"',
+                "location": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+            },
+        },
+        status=201,
+    )
+
+    user_request = {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        "userName": "bjensen@example.com",
+    }
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    response = scim_client.create(user_request)
+
+    user_created = User(
+        id="2819c223-7f76-453a-919d-413861904646",
+        user_name="bjensen@example.com",
+        meta=Meta(
+            resource_type="User",
+            created=datetime.datetime(
+                2010, 1, 23, 4, 56, 22, tzinfo=datetime.timezone.utc
+            ),
+            last_modified=datetime.datetime(
+                2011, 5, 13, 4, 42, 34, tzinfo=datetime.timezone.utc
+            ),
+            version='W\\/"3694e05e9dff590"',
+            location="https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+        ),
+    )
+    assert response == user_created
+
+
+def test_create_dict_user_bad_schema(httpserver):
+    """Test when passing a resource dict with an unknown or invalid schema."""
+
+    httpserver.expect_request("/Users", method="POST").respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "id": "2819c223-7f76-453a-919d-413861904646",
+            "userName": "bjensen@example.com",
+            "meta": {
+                "resourceType": "User",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff590"',
+                "location": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+            },
+        },
+        status=201,
+    )
+
+    user_request = {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Invalid"],
+        "userName": "bjensen@example.com",
+    }
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(
+        SCIMClientError, match="Cannot guess resource type from the payload"
+    ):
+        scim_client.create(user_request)
 
 
 def test_dont_check_response_payload(httpserver):

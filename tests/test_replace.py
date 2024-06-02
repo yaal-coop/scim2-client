@@ -8,6 +8,7 @@ from scim2_models import Meta
 from scim2_models import User
 
 from scim2_client import SCIMClient
+from scim2_client import SCIMClientError
 
 
 def test_replace_user(httpserver):
@@ -52,6 +53,86 @@ def test_replace_user(httpserver):
     scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.replace(user)
     assert response == user
+
+
+def test_replace_user_dict(httpserver):
+    """Nominal case for a User creation object by passing a dict."""
+
+    httpserver.expect_request(
+        "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
+    ).respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "id": "2819c223-7f76-453a-919d-413861904646",
+            "userName": "bjensen@example.com",
+            "meta": {
+                "resourceType": "User",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff590"',
+                "location": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+            },
+        },
+        status=200,
+        content_type="application/scim+json",
+    )
+
+    user = User(
+        id="2819c223-7f76-453a-919d-413861904646",
+        user_name="bjensen@example.com",
+        meta=Meta(
+            resource_type="User",
+            created=datetime.datetime(
+                2010, 1, 23, 4, 56, 22, tzinfo=datetime.timezone.utc
+            ),
+            last_modified=datetime.datetime(
+                2011, 5, 13, 4, 42, 34, tzinfo=datetime.timezone.utc
+            ),
+            version='W\\/"3694e05e9dff590"',
+            location="https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+        ),
+    )
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    response = scim_client.replace(user.model_dump())
+    assert response == user
+
+
+def test_replace_user_dict_bad_schema(httpserver):
+    """Test case for a User creation object by passing a dict with an invalid
+    or missing schema."""
+
+    httpserver.expect_request(
+        "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
+    ).respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "id": "2819c223-7f76-453a-919d-413861904646",
+            "userName": "bjensen@example.com",
+            "meta": {
+                "resourceType": "User",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff590"',
+                "location": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+            },
+        },
+        status=200,
+        content_type="application/scim+json",
+    )
+
+    payload = {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Invalid"],
+        "userName": "bjensen@example.com",
+    }
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(
+        SCIMClientError, match="Cannot guess resource type from the payload"
+    ):
+        scim_client.replace(payload)
 
 
 def test_dont_check_response_payload(httpserver):
@@ -216,7 +297,7 @@ def test_user_with_no_id(httpserver):
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
-    with pytest.raises(Exception, match="Resource must have an id"):
+    with pytest.raises(SCIMClientError, match="Resource must have an id"):
         scim_client.replace(user)
 
 

@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[0.1.3] - Unreleased
+--------------------
+
+Added
+^^^^^
+- :meth:`~scim2_client.SCIMClient.create` and :meth:`~scim2_client.SCIMClient.replace` can guess resource types by their payloads.
+
 [0.1.2] - 2024-06-02
 --------------------
 

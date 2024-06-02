@@ -15,8 +15,10 @@ from scim2_models import Context
 from scim2_models import Error
 from scim2_models import ListResponse
 from scim2_models import PatchOp
+from scim2_models import Resource
 from scim2_models import SearchRequest
 
+from .errors import SCIMClientError
 from .errors import UnexpectedContentFormat
 from .errors import UnexpectedContentType
 from .errors import UnexpectedStatusCode
@@ -166,6 +168,7 @@ class SCIMClient:
         <7644#section-3.3>`.
 
         :param resource: The resource to create
+            If is a :data:`dict`, the resource type will be guessed from the schema.
         :param check_request_payload: If :data:`False`,
             :code:`resource` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
@@ -184,8 +187,20 @@ class SCIMClient:
             url = kwargs.pop("url", None)
 
         else:
-            self.check_resource_type(resource.__class__)
-            url = kwargs.pop("url", self.resource_endpoint(resource.__class__))
+            if isinstance(resource, Resource):
+                resource_type = resource.__class__
+
+            else:
+                resource_type = Resource.get_by_payload(self.resource_types, resource)
+                if not resource_type:
+                    raise SCIMClientError(
+                        None, "Cannot guess resource type from the payload"
+                    )
+
+                resource = resource_type.model_validate(resource)
+
+            self.check_resource_type(resource_type)
+            url = kwargs.pop("url", self.resource_endpoint(resource_type))
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
 
         response = self.client.post(url, json=payload, **kwargs)
@@ -397,7 +412,8 @@ class SCIMClient:
         """Perform a PUT request to replace a resource, as defined in
         :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
-        :param resource: The new state of the resource to replace.
+        :param resource: The new resource to replace.
+            If is a :data:`dict`, the resource type will be guessed from the schema.
         :param check_request_payload: If :data:`False`,
             :code:`resource` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
@@ -413,12 +429,25 @@ class SCIMClient:
 
         if not check_request_payload:
             payload = resource
-            url = kwargs.pop("url")
+            url = kwargs.pop("url", None)
 
         else:
-            self.check_resource_type(resource.__class__)
+            if isinstance(resource, Resource):
+                resource_type = resource.__class__
+
+            else:
+                resource_type = Resource.get_by_payload(self.resource_types, resource)
+                if not resource_type:
+                    raise SCIMClientError(
+                        None, "Cannot guess resource type from the payload"
+                    )
+
+                resource = resource_type.model_validate(resource)
+
+            self.check_resource_type(resource_type)
+
             if not resource.id:
-                raise Exception("Resource must have an id")
+                raise SCIMClientError(None, "Resource must have an id")
 
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST)
             url = kwargs.pop(

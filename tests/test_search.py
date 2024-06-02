@@ -97,9 +97,7 @@ def test_all_objects(httpserver):
 
 
 def test_search_request(httpserver):
-    httpserver.expect_request(
-        "/.search", method="POST"
-    ).respond_with_json(
+    httpserver.expect_request("/.search", method="POST").respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
             "totalResults": 1,
