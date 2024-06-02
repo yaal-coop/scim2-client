@@ -10,7 +10,8 @@ class SCIMClientError(Exception):
 
 
 class UnexpectedStatusCode(SCIMClientError):
-    """Error raised when a server returned an unexpected status code for a given :class:`~scim2_models.Context`."""
+    """Error raised when a server returned an unexpected status code for a
+    given :class:`~scim2_models.Context`."""
 
     def __init__(
         self,
@@ -25,7 +26,8 @@ class UnexpectedStatusCode(SCIMClientError):
 
 
 class UnexpectedContentType(SCIMClientError):
-    """Error raised when a server returned an unexpected `Content-Type` header in a response."""
+    """Error raised when a server returned an unexpected `Content-Type` header
+    in a response."""
 
     def __init__(
         self,
