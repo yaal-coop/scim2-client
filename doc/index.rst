@@ -10,4 +10,5 @@ Table of contents
 
     tutorial
     reference
+    contributing
     changelog
