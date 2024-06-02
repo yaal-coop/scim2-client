@@ -2,12 +2,16 @@ from httpx import Response
 
 
 class SCIMClientError(Exception):
+    """Base exception for scim2-client."""
+
     def __init__(self, response: Response, *args, **kwargs):
         self.response = response
         super().__init__(*args, **kwargs)
 
 
 class UnexpectedStatusCode(SCIMClientError):
+    """Error raised when a server returned an unexpected status code for a given :class:`~scim2_models.Context`."""
+
     def __init__(
         self,
         response: Response,
@@ -21,6 +25,8 @@ class UnexpectedStatusCode(SCIMClientError):
 
 
 class UnexpectedContentType(SCIMClientError):
+    """Error raised when a server returned an unexpected `Content-Type` header in a response."""
+
     def __init__(
         self,
         response: Response,
@@ -33,6 +39,8 @@ class UnexpectedContentType(SCIMClientError):
 
 
 class UnexpectedContentFormat(SCIMClientError):
+    """Error raised when a server returned a response in a non-JSON format."""
+
     def __init__(
         self,
         response: Response,

@@ -184,7 +184,24 @@ class SCIMClient:
 
         :return:
             - An :class:`~scim2_models.Error` object in case of error.
-            - The created object as returned by the server in case of success.
+            - The created object as returned by the server in case of success and :code:`check_response_payload` is :data:`True`.
+            - The created object payload as returned by the server in case of success and :code:`check_response_payload` is :data:`False`.
+
+        .. code-block:: python
+            :caption: Creation of a `User` resource
+
+            from scim2_models import User
+
+            request = User(user_name="bjensen@example.com")
+            response = scim.create(request)
+            # 'response' may be a User or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_CREATION_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_CREATION_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
         """
 
         if not check_request_payload:
@@ -249,6 +266,30 @@ class SCIMClient:
             - A :class:`~scim2_models.Error` object in case of error.
             - A `resource_type` object in case of success if `id` is not :data:`None`
             - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
+
+        .. code-block:: python
+            :caption: Query of a `User` resource knowing its id
+
+            from scim2_models import User
+
+            response = scim.query(User, "my-user-id)
+            # 'response' may be a User or an Error object
+
+        .. code-block:: python
+            :caption: Query of all the `User` resources filtering the ones with `userName` starts with `john`
+
+            from scim2_models import User, SearchRequest
+
+            req = SearchRequest(filter='filter=userName sw "john"')
+            response = scim.query(User, search_request=search_request)
+            # 'response' may be a ListResponse[User] or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_QUERY_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_QUERY_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
         """
 
         self.check_resource_type(resource_type)
@@ -304,6 +345,22 @@ class SCIMClient:
         :return:
             - A :class:`~scim2_models.Error` object in case of error.
             - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
+
+        .. code-block:: python
+            :caption: Query of all the resources filtering the ones with `id` contains with `admin`
+
+            from scim2_models import User, SearchRequest
+
+            req = SearchRequest(filter='filter=id co "john"')
+            response = scim.query_all(search_request=search_request)
+            # 'response' may be a ListResponse[User] or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_QUERY_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_QUERY_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
         """
 
         # A query against a server root indicates that all resources within the
@@ -358,6 +415,22 @@ class SCIMClient:
         :return:
             - A :class:`~scim2_models.Error` object in case of error.
             - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
+
+        .. code-block:: python
+            :caption: Searching for all the resources filtering the ones with `id` contains with `admin`
+
+            from scim2_models import User, SearchRequest
+
+            req = SearchRequest(filter='filter=id co "john"')
+            response = scim.search(search_request=search_request)
+            # 'response' may be a ListResponse[User] or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.SEARCH_REQUEST`
+            and :attr:`~scim2_models.Context.SEARCH_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
         """
 
         if not check_request_payload:
@@ -392,6 +465,14 @@ class SCIMClient:
         :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
+
+        .. code-block:: python
+            :caption: Deleting an `User` which `id` is `foobar`
+
+            from scim2_models import User, SearchRequest
+
+            response = scim.delete(User, "foobar")
+            # 'response' may be None, or an Error object
 
         :return:
             - A :class:`~scim2_models.Error` object in case of error.
@@ -430,6 +511,23 @@ class SCIMClient:
         :return:
             - An :class:`~scim2_models.Error` object in case of error.
             - The updated object as returned by the server in case of success.
+
+        .. code-block:: python
+            :caption: Replacement of a `User` resource
+
+            from scim2_models import User
+
+            user = scim.query(User, "my-used-id")
+            user.display_name = "Fancy New Name"
+            response = scim.update(user)
+            # 'response' may be a User or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_REPLACE_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_REPLACE_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
         """
 
         if not check_request_payload:
