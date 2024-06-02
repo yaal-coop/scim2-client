@@ -352,7 +352,7 @@ class SCIMClient:
                 else None
             )
 
-        response = self.client.post("/.search", params=payload)
+        response = self.client.post("/.search", json=payload)
 
         return self.check_response(
             response,

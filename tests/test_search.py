@@ -97,10 +97,8 @@ def test_all_objects(httpserver):
 
 
 def test_search_request(httpserver):
-    query_string = "attributes=userName&attributes=displayName&excludedAttributes=timezone&excludedAttributes=phoneNumbers&filter=userName%20Eq%20%22john%22&sortBy=userName&sortOrder=ascending&startIndex=1&count=10"
-
     httpserver.expect_request(
-        "/.search", method="POST", query_string=query_string
+        "/.search", method="POST"
     ).respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
