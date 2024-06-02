@@ -156,7 +156,8 @@ class SCIMClient:
 
     def create(
         self,
-        resource: AnyResource,
+        resource: Union[AnyResource, Dict],
+        check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
         **kwargs,
@@ -165,6 +166,8 @@ class SCIMClient:
         <7644#section-3.3>`.
 
         :param resource: The resource to create
+        :param check_request_payload: If :data:`False`,
+            :code:`resource` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
@@ -176,15 +179,23 @@ class SCIMClient:
             - The created object as returned by the server in case of success.
         """
 
-        self.check_resource_type(resource.__class__)
-        url = self.resource_endpoint(resource.__class__)
-        dump = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
-        response = self.client.post(url, json=dump, **kwargs)
+        if not check_request_payload:
+            payload = resource
+            url = kwargs.pop("url", None)
+
+        else:
+            self.check_resource_type(resource.__class__)
+            url = kwargs.pop("url", self.resource_endpoint(resource.__class__))
+            payload = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
+
+        response = self.client.post(url, json=payload, **kwargs)
 
         return self.check_response(
             response,
             self.CREATION_RESPONSE_STATUS_CODES if check_status_code else None,
-            resource.__class__ if check_response_payload else None,
+            resource.__class__
+            if check_request_payload and check_response_payload
+            else None,
             scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
         )
 
@@ -192,7 +203,8 @@ class SCIMClient:
         self,
         resource_type: Type,
         id: Optional[str] = None,
-        search_request: Optional[SearchRequest] = None,
+        search_request: Optional[Union[SearchRequest, Dict]] = None,
+        check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
         **kwargs,
@@ -206,6 +218,8 @@ class SCIMClient:
         :param resource_type: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
+        :param check_request_payload: If :data:`False`,
+            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
@@ -218,14 +232,18 @@ class SCIMClient:
         """
 
         self.check_resource_type(resource_type)
-        payload = (
-            search_request.model_dump(
-                exclude_unset=True,
-                scim_ctx=Context.RESOURCE_QUERY_REQUEST,
+        if not check_request_payload:
+            payload = search_request
+
+        else:
+            payload = (
+                search_request.model_dump(
+                    exclude_unset=True,
+                    scim_ctx=Context.RESOURCE_QUERY_REQUEST,
+                )
+                if search_request
+                else None
             )
-            if search_request
-            else None
-        )
 
         if not id:
             expected_type = ListResponse[resource_type]
@@ -246,6 +264,7 @@ class SCIMClient:
     def query_all(
         self,
         search_request: Optional[SearchRequest] = None,
+        check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
         **kwargs,
@@ -254,6 +273,8 @@ class SCIMClient:
         :rfc:`RFC7644 §3.4.2.1 <7644#section-3.4.2.1>`.
 
         :param search_request: An object detailing the search query parameters.
+        :param check_request_payload: If :data:`False`,
+            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
@@ -269,13 +290,18 @@ class SCIMClient:
         # server SHALL be included, subject to filtering.
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.4.2.1
 
-        payload = (
-            search_request.model_dump(
-                exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_REQUEST
+        if not check_request_payload:
+            payload = search_request
+
+        else:
+            payload = (
+                search_request.model_dump(
+                    exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_REQUEST
+                )
+                if search_request
+                else None
             )
-            if search_request
-            else None
-        )
+
         response = self.client.get("/", params=payload)
 
         return self.check_response(
@@ -290,6 +316,7 @@ class SCIMClient:
     def search(
         self,
         search_request: Optional[SearchRequest] = None,
+        check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
         **kwargs,
@@ -300,6 +327,8 @@ class SCIMClient:
         :param resource_types: Resource type or union of types expected
             to be read from the response.
         :param search_request: An object detailing the search query parameters.
+        :param check_request_payload: If :data:`False`,
+            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
@@ -311,13 +340,18 @@ class SCIMClient:
             - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
         """
 
-        payload = (
-            search_request.model_dump(
-                exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_RESPONSE
+        if not check_request_payload:
+            payload = search_request
+
+        else:
+            payload = (
+                search_request.model_dump(
+                    exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_RESPONSE
+                )
+                if search_request
+                else None
             )
-            if search_request
-            else None
-        )
+
         response = self.client.post("/.search", params=payload)
 
         return self.check_response(
@@ -354,7 +388,8 @@ class SCIMClient:
 
     def replace(
         self,
-        resource: AnyResource,
+        resource: Union[AnyResource, Dict],
+        check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
         **kwargs,
@@ -363,6 +398,8 @@ class SCIMClient:
         :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
         :param resource: The new state of the resource to replace.
+        :param check_request_payload: If :data:`False`,
+            :code:`resource` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
@@ -374,22 +411,32 @@ class SCIMClient:
             - The updated object as returned by the server in case of success.
         """
 
-        self.check_resource_type(resource.__class__)
-        if not resource.id:
-            raise Exception("Resource must have an id")
+        if not check_request_payload:
+            payload = resource
+            url = kwargs.pop("url")
 
-        dump = resource.model_dump(scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST)
-        url = self.resource_endpoint(resource.__class__) + f"/{resource.id}"
-        response = self.client.put(url, json=dump, **kwargs)
+        else:
+            self.check_resource_type(resource.__class__)
+            if not resource.id:
+                raise Exception("Resource must have an id")
+
+            payload = resource.model_dump(scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST)
+            url = kwargs.pop(
+                "url", self.resource_endpoint(resource.__class__) + f"/{resource.id}"
+            )
+
+        response = self.client.put(url, json=payload, **kwargs)
 
         return self.check_response(
             response,
             self.REPLACEMENT_RESPONSE_STATUS_CODES if check_status_code else None,
-            resource.__class__ if check_response_payload else None,
+            resource.__class__
+            if check_request_payload and check_response_payload
+            else None,
             scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
         )
 
     def modify(
-        self, resource: AnyResource, op: PatchOp, **kwargs
+        self, resource: Union[AnyResource, Dict], op: PatchOp, **kwargs
     ) -> Optional[Union[AnyResource, Dict]]:
         raise NotImplementedError()

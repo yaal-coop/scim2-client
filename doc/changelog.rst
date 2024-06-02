@@ -3,7 +3,8 @@ Changelog
 
 Added
 ^^^^^
-- :code:`check_response_payload` and :code:`check_status_code` for all methods.
+- :code:`check_response_payload` and :code:`check_status_code` parameters for all methods.
+- :code:`check_request_payload` parameter for all methods.
 
 [0.1.1] - 2024-06-01
 --------------------

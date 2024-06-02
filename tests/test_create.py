@@ -54,7 +54,7 @@ def test_create_user(httpserver):
     assert response == user_created
 
 
-def test_dont_check_response(httpserver):
+def test_dont_check_response_payload(httpserver):
     """Test the check_response_payload_attribute."""
 
     httpserver.expect_request("/Users", method="POST").respond_with_json(
@@ -67,6 +67,54 @@ def test_dont_check_response(httpserver):
     scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request, check_response_payload=False)
     assert response == {"foo": "bar"}
+
+
+def test_dont_check_request_payload(httpserver):
+    """Test the check_request_payload_attribute.
+
+    TODO: Actually check that the payload is sent through the network
+    """
+
+    httpserver.expect_request("/Users", method="POST").respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "id": "2819c223-7f76-453a-919d-413861904646",
+            "userName": "bjensen@example.com",
+            "meta": {
+                "resourceType": "User",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff590"',
+                "location": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+            },
+        },
+        status=201,
+    )
+
+    user_request = {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        "userName": "bjensen@example.com",
+    }
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    response = scim_client.create(
+        user_request, check_request_payload=False, url="/Users"
+    )
+
+    user_created = {
+        "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+        "id": "2819c223-7f76-453a-919d-413861904646",
+        "userName": "bjensen@example.com",
+        "meta": {
+            "resourceType": "User",
+            "created": "2010-01-23T04:56:22Z",
+            "lastModified": "2011-05-13T04:42:34Z",
+            "version": 'W\\/"3694e05e9dff590"',
+            "location": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+        },
+    }
+    assert response == user_created
 
 
 def test_conflict(httpserver):
