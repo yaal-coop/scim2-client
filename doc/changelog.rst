@@ -1,6 +1,9 @@
 Changelog
 =========
 
+[0.1.4] - 2024-06-03
+--------------------
+
 Fixed
 ^^^^^
 - :meth:`~scim2_client.SCIMClient.resource_endpoint` could not correctly guess endpoints for resources with extensions.
