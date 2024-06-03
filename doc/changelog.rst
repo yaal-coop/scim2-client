@@ -4,7 +4,8 @@ Changelog
 Fixed
 ^^^^^
 
-- Endpoint guessing for :class:`~scim2_models.ServiceProviderConfig`
+- Endpoint guessing for :class:`~scim2_models.ServiceProviderConfig`.
+- :class:`~scim2_models.ServiceProviderConfig` cannot have ids and are not returned in :class:`~scim2_models.ListResponse`.
 
 [0.1.4] - 2024-06-03
 --------------------

@@ -272,6 +272,13 @@ class SCIMClient:
             - A `resource_type` object in case of success if `id` is not :data:`None`
             - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
 
+        .. note::
+
+            Querying a :class:`~scim2_models.ServiceProviderConfig` will return a
+            single object, and not a :class:`~scim2_models.ListResponse`.
+
+        :usage:
+
         .. code-block:: python
             :caption: Query of a `User` resource knowing its id
 
@@ -311,13 +318,19 @@ class SCIMClient:
                 else None
             )
 
-        if not id:
-            expected_type = ListResponse[resource_type]
-            url = self.resource_endpoint(resource_type)
+        url = self.resource_endpoint(resource_type)
+
+        if resource_type == ServiceProviderConfig:
+            expected_type = resource_type
+            if id:
+                raise SCIMClientError(None, "ServiceProviderConfig cannot have an id")
+
+        elif id:
+            expected_type = resource_type
+            url = f"{url}/{id}"
 
         else:
-            expected_type = resource_type
-            url = self.resource_endpoint(resource_type) + f"/{id}"
+            expected_type = ListResponse[resource_type]
 
         response = self.client.get(url, params=payload, **kwargs)
         return self.check_response(
@@ -350,6 +363,8 @@ class SCIMClient:
         :return:
             - A :class:`~scim2_models.Error` object in case of error.
             - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
+
+        :usage:
 
         .. code-block:: python
             :caption: Query of all the resources filtering the ones with `id` contains with `admin`
@@ -421,6 +436,8 @@ class SCIMClient:
             - A :class:`~scim2_models.Error` object in case of error.
             - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
 
+        :usage:
+
         .. code-block:: python
             :caption: Searching for all the resources filtering the ones with `id` contains with `admin`
 
@@ -471,6 +488,12 @@ class SCIMClient:
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
+        :return:
+            - A :class:`~scim2_models.Error` object in case of error.
+            - :data:`None` in case of success.
+
+        :usage:
+
         .. code-block:: python
             :caption: Deleting an `User` which `id` is `foobar`
 
@@ -478,10 +501,6 @@ class SCIMClient:
 
             response = scim.delete(User, "foobar")
             # 'response' may be None, or an Error object
-
-        :return:
-            - A :class:`~scim2_models.Error` object in case of error.
-            - :data:`None` in case of success.
         """
 
         self.check_resource_type(resource_type)
@@ -516,6 +535,8 @@ class SCIMClient:
         :return:
             - An :class:`~scim2_models.Error` object in case of error.
             - The updated object as returned by the server in case of success.
+
+        :usage:
 
         .. code-block:: python
             :caption: Replacement of a `User` resource

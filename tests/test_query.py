@@ -9,6 +9,7 @@ from scim2_models import ListResponse
 from scim2_models import Meta
 from scim2_models import Resource
 from scim2_models import SearchRequest
+from scim2_models import ServiceProviderConfig
 from scim2_models import SortOrder
 from scim2_models import User
 
@@ -16,6 +17,7 @@ from scim2_client import SCIMClient
 from scim2_client.client import UnexpectedContentFormat
 from scim2_client.client import UnexpectedContentType
 from scim2_client.client import UnexpectedStatusCode
+from scim2_client.errors import SCIMClientError
 
 
 @pytest.fixture
@@ -212,6 +214,46 @@ def httpserver(httpserver):
         status=200,
     )
 
+    httpserver.expect_request("/ServiceProviderConfig").respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"],
+            "documentationUri": "http://example.com/help/scim.html",
+            "patch": {"supported": True},
+            "bulk": {
+                "supported": True,
+                "maxOperations": 1000,
+                "maxPayloadSize": 1048576,
+            },
+            "filter": {"supported": True, "maxResults": 200},
+            "changePassword": {"supported": True},
+            "sort": {"supported": True},
+            "etag": {"supported": True},
+            "authenticationSchemes": [
+                {
+                    "name": "OAuth Bearer Token",
+                    "description": "Authentication scheme using the OAuth Bearer Token Standard",
+                    "specUri": "http://www.rfc-editor.org/info/rfc6750",
+                    "documentationUri": "http://example.com/help/oauth.html",
+                    "type": "oauthbearertoken",
+                    "primary": True,
+                },
+                {
+                    "name": "HTTP Basic",
+                    "description": "Authentication scheme using the HTTP Basic Standard",
+                    "specUri": "http://www.rfc-editor.org/info/rfc2617",
+                    "documentationUri": "http://example.com/help/httpBasic.html",
+                    "type": "httpbasic",
+                },
+            ],
+            "meta": {
+                "location": "https://example.com/v2/ServiceProviderConfig",
+                "resourceType": "ServiceProviderConfig",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff594"',
+            },
+        }
+    )
     return httpserver
 
 
@@ -583,3 +625,24 @@ def test_invalid_resource_type(httpserver):
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(ValueError, match=r"Unknown resource type"):
         scim_client.query(Group)
+
+
+def test_service_provider_config_endpoint(client):
+    """Test that querying the /ServiceProviderConfig enpdoint correctly returns
+    a ServiceProviderConfig (and not a ListResponse)."""
+
+    scim_client = SCIMClient(client, resource_types=(ServiceProviderConfig,))
+    response = scim_client.query(ServiceProviderConfig)
+    assert isinstance(response, ServiceProviderConfig)
+
+
+def test_service_provider_config_endpoint_with_an_id(client):
+    """Test that querying the /ServiceProviderConfig with an id raise an
+    exception."""
+
+    scim_client = SCIMClient(client, resource_types=(ServiceProviderConfig,))
+
+    with pytest.raises(
+        SCIMClientError, match="ServiceProviderConfig cannot have an id"
+    ):
+        scim_client.query(ServiceProviderConfig, "dummy")
