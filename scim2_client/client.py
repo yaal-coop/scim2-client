@@ -3,7 +3,6 @@ import json.decoder
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Tuple
 from typing import Type
 from typing import Union
 
@@ -20,6 +19,7 @@ from scim2_models import SearchRequest
 from scim2_models import ServiceProviderConfig
 
 from .errors import SCIMClientError
+from .errors import SCIMRequestError
 from .errors import UnexpectedContentFormat
 from .errors import UnexpectedContentType
 from .errors import UnexpectedStatusCode
@@ -98,13 +98,13 @@ class SCIMClient:
     """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.2
     <7644#section-3.4.2>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
 
-    def __init__(self, client: Client, resource_types: Optional[Tuple[Type]] = None):
+    def __init__(self, client: Client, resource_types: Optional[List[Type]] = None):
         self.client = client
-        self.resource_types = resource_types or ()
+        self.resource_types = resource_types or []
 
     def check_resource_type(self, resource_type):
         if resource_type not in self.resource_types:
-            raise ValueError(f"Unknown resource type: '{resource_type}'")
+            raise SCIMRequestError(f"Unknown resource type: '{resource_type}'")
 
     def resource_endpoint(self, resource_type: Type):
         # This one takes no final 's'
@@ -126,7 +126,7 @@ class SCIMClient:
         scim_ctx: Optional[Context] = None,
     ):
         if expected_status_codes and response.status_code not in expected_status_codes:
-            raise UnexpectedStatusCode(response)
+            raise UnexpectedStatusCode(response=response)
 
         # Interoperability considerations:  The "application/scim+json" media
         # type is intended to identify JSON structure data that conforms to
@@ -136,7 +136,7 @@ class SCIMClient:
 
         expected_response_content_types = ("application/scim+json", "application/json")
         if response.headers.get("content-type") not in expected_response_content_types:
-            raise UnexpectedContentType(response)
+            raise UnexpectedContentType(response=response)
 
         # In addition to returning an HTTP response code, implementers MUST return
         # the errors in the body of the response in a JSON format
@@ -150,7 +150,7 @@ class SCIMClient:
             try:
                 response_payload = response.json()
             except json.decoder.JSONDecodeError as exc:
-                raise UnexpectedContentFormat(response) from exc
+                raise UnexpectedContentFormat(response=response) from exc
 
         try:
             return Error.model_validate(response_payload)
@@ -220,8 +220,8 @@ class SCIMClient:
             else:
                 resource_type = Resource.get_by_payload(self.resource_types, resource)
                 if not resource_type:
-                    raise SCIMClientError(
-                        None, "Cannot guess resource type from the payload"
+                    raise SCIMRequestError(
+                        "Cannot guess resource type from the payload"
                     )
 
                 resource = resource_type.model_validate(resource)
@@ -233,11 +233,15 @@ class SCIMClient:
         response = self.client.post(url, json=payload, **kwargs)
 
         return self.check_response(
-            response,
-            self.CREATION_RESPONSE_STATUS_CODES if check_status_code else None,
-            resource.__class__
-            if check_request_payload and check_response_payload
-            else None,
+            response=response,
+            expected_status_codes=(
+                self.CREATION_RESPONSE_STATUS_CODES if check_status_code else None
+            ),
+            expected_type=(
+                resource.__class__
+                if check_request_payload and check_response_payload
+                else None
+            ),
             scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
         )
 
@@ -323,7 +327,7 @@ class SCIMClient:
         if resource_type == ServiceProviderConfig:
             expected_type = resource_type
             if id:
-                raise SCIMClientError(None, "ServiceProviderConfig cannot have an id")
+                raise SCIMClientError("ServiceProviderConfig cannot have an id")
 
         elif id:
             expected_type = resource_type
@@ -334,9 +338,11 @@ class SCIMClient:
 
         response = self.client.get(url, params=payload, **kwargs)
         return self.check_response(
-            response,
-            self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None,
-            expected_type if check_response_payload else None,
+            response=response,
+            expected_status_codes=(
+                self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
+            ),
+            expected_type=(expected_type if check_response_payload else None),
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
@@ -402,11 +408,15 @@ class SCIMClient:
         response = self.client.get("/", params=payload)
 
         return self.check_response(
-            response,
-            self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None,
-            ListResponse[Union[self.resource_types]]
-            if check_response_payload
-            else None,
+            response=response,
+            expected_status_codes=(
+                self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
+            ),
+            expected_type=(
+                ListResponse[Union[self.resource_types]]
+                if check_response_payload
+                else None
+            ),
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
@@ -470,11 +480,15 @@ class SCIMClient:
         response = self.client.post("/.search", json=payload)
 
         return self.check_response(
-            response,
-            self.SEARCH_RESPONSE_STATUS_CODES if check_status_code else None,
-            ListResponse[Union[self.resource_types]]
-            if check_response_payload
-            else None,
+            response=response,
+            expected_status_codes=(
+                self.SEARCH_RESPONSE_STATUS_CODES if check_status_code else None
+            ),
+            expected_type=(
+                ListResponse[Union[self.resource_types]]
+                if check_response_payload
+                else None
+            ),
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
@@ -508,7 +522,10 @@ class SCIMClient:
         response = self.client.delete(url, **kwargs)
 
         return self.check_response(
-            response, self.DELETION_RESPONSE_STATUS_CODES if check_status_code else None
+            response=response,
+            expected_status_codes=self.DELETION_RESPONSE_STATUS_CODES
+            if check_status_code
+            else None,
         )
 
     def replace(
@@ -567,8 +584,9 @@ class SCIMClient:
             else:
                 resource_type = Resource.get_by_payload(self.resource_types, resource)
                 if not resource_type:
-                    raise SCIMClientError(
-                        None, "Cannot guess resource type from the payload"
+                    raise SCIMRequestError(
+                        "Cannot guess resource type from the payload",
+                        payload=resource,
                     )
 
                 resource = resource_type.model_validate(resource)
@@ -576,7 +594,7 @@ class SCIMClient:
             self.check_resource_type(resource_type)
 
             if not resource.id:
-                raise SCIMClientError(None, "Resource must have an id")
+                raise SCIMRequestError("Resource must have an id", payload=resource)
 
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST)
             url = kwargs.pop(
@@ -586,11 +604,15 @@ class SCIMClient:
         response = self.client.put(url, json=payload, **kwargs)
 
         return self.check_response(
-            response,
-            self.REPLACEMENT_RESPONSE_STATUS_CODES if check_status_code else None,
-            resource.__class__
-            if check_request_payload and check_response_payload
-            else None,
+            response=response,
+            expected_status_codes=(
+                self.REPLACEMENT_RESPONSE_STATUS_CODES if check_status_code else None
+            ),
+            expected_type=(
+                resource.__class__
+                if check_request_payload and check_response_payload
+                else None
+            ),
             scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
         )
 

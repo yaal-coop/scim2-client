@@ -1,53 +1,61 @@
+from typing import Any
+
 from httpx import Response
 
 
 class SCIMClientError(Exception):
     """Base exception for scim2-client."""
 
-    def __init__(self, response: Response, *args, **kwargs):
+    def __init__(self, message: str, *args, **kwargs):
+        self.message = message
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        return self.message or "UNKNOWN"
+
+
+class SCIMRequestError(SCIMClientError):
+    """Base exception for errors happening during request payload building."""
+
+    def __init__(self, *args, payload: Any = None, **kwargs):
+        self.payload = payload
+        super().__init__(*args, **kwargs)
+
+
+class SCIMResponseError(SCIMClientError):
+    """Base exception for errors happening during response payload
+    validation."""
+
+    def __init__(self, *args, response: Response, **kwargs):
         self.response = response
         super().__init__(*args, **kwargs)
 
 
-class UnexpectedStatusCode(SCIMClientError):
+class UnexpectedStatusCode(SCIMResponseError):
     """Error raised when a server returned an unexpected status code for a
     given :class:`~scim2_models.Context`."""
 
-    def __init__(
-        self,
-        response: Response,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, *args, **kwargs):
         message = kwargs.pop(
-            "message", f"Unexpected response status code: {response.status_code}"
+            "message",
+            f"Unexpected response status code: {kwargs['response'].status_code}",
         )
-        super().__init__(response, message, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)
 
 
-class UnexpectedContentType(SCIMClientError):
+class UnexpectedContentType(SCIMResponseError):
     """Error raised when a server returned an unexpected `Content-Type` header
     in a response."""
 
-    def __init__(
-        self,
-        response: Response,
-        *args,
-        **kwargs,
-    ):
-        content_type = response.headers.get("content-type", "")
+    def __init__(self, *args, **kwargs):
+        content_type = kwargs["response"].headers.get("content-type", "")
         message = kwargs.pop("message", f"Unexpected content type: {content_type}")
-        super().__init__(response, message, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)
 
 
-class UnexpectedContentFormat(SCIMClientError):
+class UnexpectedContentFormat(SCIMResponseError):
     """Error raised when a server returned a response in a non-JSON format."""
 
-    def __init__(
-        self,
-        response: Response,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, *args, **kwargs):
         message = kwargs.pop("message", "Unexpected response content format")
-        super().__init__(response, message, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)

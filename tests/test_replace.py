@@ -9,6 +9,7 @@ from scim2_models import User
 
 from scim2_client import SCIMClient
 from scim2_client import SCIMClientError
+from scim2_client import SCIMRequestError
 
 
 def test_replace_user(httpserver):
@@ -307,5 +308,5 @@ def test_invalid_resource_type(httpserver):
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
-    with pytest.raises(ValueError, match=r"Unknown resource type"):
+    with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
         scim_client.replace(Group(display_name="foobar"))

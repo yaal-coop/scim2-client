@@ -1,5 +1,7 @@
 from .client import SCIMClient
 from .errors import SCIMClientError
+from .errors import SCIMRequestError
+from .errors import SCIMResponseError
 from .errors import UnexpectedContentFormat
 from .errors import UnexpectedContentType
 from .errors import UnexpectedStatusCode
@@ -7,7 +9,9 @@ from .errors import UnexpectedStatusCode
 __all__ = [
     "SCIMClient",
     "SCIMClientError",
-    "UnexpectedStatusCode",
-    "UnexpectedContentType",
+    "SCIMRequestError",
+    "SCIMResponseError",
     "UnexpectedContentFormat",
+    "UnexpectedContentType",
+    "UnexpectedStatusCode",
 ]
