@@ -524,8 +524,8 @@ class SCIMClient:
 
         .. tip::
 
-            Check the :attr:`~scim2_models.Context.RESOURCE_REPLACE_REQUEST`
-            and :attr:`~scim2_models.Context.RESOURCE_REPLACE_RESPONSE` contexts to understand
+            Check the :attr:`~scim2_models.Context.RESOURCE_REPLACEMENT_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_REPLACEMENT_RESPONSE` contexts to understand
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
