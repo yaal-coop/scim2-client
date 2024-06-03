@@ -17,6 +17,7 @@ from scim2_models import ListResponse
 from scim2_models import PatchOp
 from scim2_models import Resource
 from scim2_models import SearchRequest
+from scim2_models import ServiceProviderConfig
 
 from .errors import SCIMClientError
 from .errors import UnexpectedContentFormat
@@ -106,6 +107,10 @@ class SCIMClient:
             raise ValueError(f"Unknown resource type: '{resource_type}'")
 
     def resource_endpoint(self, resource_type: Type):
+        # This one takes no final 's'
+        if resource_type is ServiceProviderConfig:
+            return "/ServiceProviderConfig"
+
         try:
             first_bracket_index = resource_type.__name__.index("[")
             root_name = resource_type.__name__[:first_bracket_index]

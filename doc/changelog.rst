@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Fixed
+^^^^^
+
+- Endpoint guessing for :class:`~scim2_models.ServiceProviderConfig`
+
 [0.1.4] - 2024-06-03
 --------------------
 
