@@ -11,11 +11,11 @@ In addition to your SCIM server root endpoint, you will probably want to provide
 .. code-block:: python
 
     from httpx import Client
-    from scim2_models import User, EnterpriseUserUser, Group, Error, Schema, ResourceType, ServiceProviderConfiguration
+    from scim2_models import User, EnterpriseUserUser, Group, Error, Schema, ResourceType, ServiceProviderConfig
     from scim2_client import SCIMClient
 
     client = Client(base_url=f"https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-    resource_types=[User[EnterpriseUser], Group, Schema, ResourceType, ServiceProviderConfiguration]
+    resource_types=[User[EnterpriseUser], Group, Schema, ResourceType, ServiceProviderConfig]
     scim = SCIMClient(client, resource_types=resource_types)
 
 You need to give to indicate to :class:`~scim2_client.SCIMClient` all the different :class:`~scim2_models.Resource` types that you will need to manipulate with the :code:`resource_types` parameter.
