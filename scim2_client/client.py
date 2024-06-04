@@ -300,7 +300,7 @@ class SCIMClient:
 
             from scim2_models import User, SearchRequest
 
-            req = SearchRequest(filter='filter=userName sw "john"')
+            req = SearchRequest(filter='userName sw "john"')
             response = scim.query(User, search_request=search_request)
             # 'response' may be a ListResponse[User] or an Error object
 
@@ -397,7 +397,7 @@ class SCIMClient:
 
             from scim2_models import User, SearchRequest
 
-            req = SearchRequest(filter='filter=id co "john"')
+            req = SearchRequest(filter='id co "john"')
             response = scim.search(search_request=search_request)
             # 'response' may be a ListResponse[User] or an Error object
 
