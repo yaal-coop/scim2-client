@@ -475,12 +475,19 @@ def test_response_is_not_json(client):
         scim_client.query(User, "not-json")
 
 
+def test_not_a_scim_object(client):
+    """Test retrieving a valid JSON object without a schema."""
+
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(
+        SCIMResponseError,
+        match="Expected type User but got undefined object with no schema",
+    ):
+        scim_client.query(User, "not-a-scim-object")
+
+
 def test_dont_check_response_payload(httpserver, client):
     """Test the check_response_payload attribute."""
-
-    httpserver.expect_request(
-        "/Users/not-a-scim-object", method="GET"
-    ).respond_with_json({"foo": "bar"}, status=200)
 
     scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.query(

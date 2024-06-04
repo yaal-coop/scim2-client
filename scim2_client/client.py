@@ -188,11 +188,15 @@ class SCIMClient:
 
         if not actual_type:
             expected = ", ".join([type.__name__ for type in expected_types])
-            schema = ", ".join(response_payload.get("schemas", []))
-            raise SCIMResponseError(
-                f"Expected type {expected} but got unknow resource with schemas: {schema}",
-                response=response,
-            )
+            try:
+                schema = ", ".join(response_payload["schemas"])
+                message = f"Expected type {expected} but got unknow resource with schemas: {schema}"
+            except KeyError:
+                message = (
+                    f"Expected type {expected} but got undefined object with no schema"
+                )
+
+            raise SCIMResponseError(message, response=response)
 
         try:
             return actual_type.model_validate(response_payload, scim_ctx=scim_ctx)
