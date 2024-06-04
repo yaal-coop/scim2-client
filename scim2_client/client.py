@@ -3,6 +3,7 @@ import json.decoder
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Type
 from typing import Union
 
@@ -15,6 +16,8 @@ from scim2_models import Error
 from scim2_models import ListResponse
 from scim2_models import PatchOp
 from scim2_models import Resource
+from scim2_models import ResourceType
+from scim2_models import Schema
 from scim2_models import SearchRequest
 from scim2_models import ServiceProviderConfig
 
@@ -31,7 +34,16 @@ BASE_HEADERS = {
 
 
 class SCIMClient:
-    """An object that perform SCIM requests and validate responses."""
+    """An object that perform SCIM requests and validate responses.
+
+    :param client: A :class:`httpx.Client` instance that will be used to send requests.
+    :param resource_types: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIMClient.
+        If a request payload describe a resource that is not in this list, an exception will be raised.
+
+    .. note::
+
+        :class:`~scim2_models.ResourceType`, :class:`~scim2_models.Schema` and :class:`scim2_models.ServiceProviderConfig` are pre-loaded by default.
+    """
 
     CREATION_RESPONSE_STATUS_CODES: List[int] = [
         201,
@@ -98,9 +110,11 @@ class SCIMClient:
     """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.2
     <7644#section-3.4.2>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
 
-    def __init__(self, client: Client, resource_types: Optional[List[Type]] = None):
+    def __init__(self, client: Client, resource_types: Optional[Tuple[Type]] = None):
         self.client = client
-        self.resource_types = resource_types or []
+        self.resource_types = tuple(
+            set(resource_types or []) | {ResourceType, Schema, ServiceProviderConfig}
+        )
 
     def check_resource_type(self, resource_type):
         if resource_type not in self.resource_types:
