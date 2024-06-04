@@ -1,9 +1,12 @@
 Changelog
 =========
 
+Added
+^^^^^
+- Implement :meth:`~scim2_client.SCIMClient.delete` `check_response_payload` attribute.
+
 Fixed
 ^^^^^
-
 - Endpoint guessing for :class:`~scim2_models.ServiceProviderConfig`.
 - :class:`~scim2_models.ServiceProviderConfig` cannot have ids and are not returned in :class:`~scim2_models.ListResponse`.
 

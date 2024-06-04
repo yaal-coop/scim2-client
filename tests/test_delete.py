@@ -55,3 +55,29 @@ def test_invalid_resource_type(httpserver):
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
         scim_client.delete(Group(display_name="foobar"), id="foobar")
+
+
+def test_dont_check_response_payload(httpserver):
+    """Test the check_response_payload attribute."""
+
+    httpserver.expect_request(
+        "/Users/2819c223-7f76-453a-919d-413861904646", method="DELETE"
+    ).respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+            "status": "404",
+            "detail": "404 error",
+        },
+        status=404,
+    )
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    response = scim_client.delete(
+        User, "2819c223-7f76-453a-919d-413861904646", check_response_payload=False
+    )
+    assert response == {
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
+        "status": "404",
+        "detail": "404 error",
+    }

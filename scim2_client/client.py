@@ -123,6 +123,7 @@ class SCIMClient:
         response: Response,
         expected_status_codes: List[int],
         expected_type: Optional[Type] = None,
+        check_response_payload: bool = True,
         scim_ctx: Optional[Context] = None,
     ):
         if expected_status_codes and response.status_code not in expected_status_codes:
@@ -152,19 +153,22 @@ class SCIMClient:
             except json.decoder.JSONDecodeError as exc:
                 raise UnexpectedContentFormat(response=response) from exc
 
+        if not check_response_payload:
+            return response_payload
+
         try:
             return Error.model_validate(response_payload)
         except ValidationError:
             pass
 
-        if expected_type:
-            try:
-                return expected_type.model_validate(response_payload, scim_ctx=scim_ctx)
-            except ValidationError as exc:
-                exc.response_payload = response_payload
-                raise exc
+        if not expected_type:
+            return response_payload
 
-        return response_payload
+        try:
+            return expected_type.model_validate(response_payload, scim_ctx=scim_ctx)
+        except ValidationError as exc:
+            exc.response_payload = response_payload
+            raise exc
 
     def create(
         self,
@@ -237,11 +241,8 @@ class SCIMClient:
             expected_status_codes=(
                 self.CREATION_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(
-                resource.__class__
-                if check_request_payload and check_response_payload
-                else None
-            ),
+            expected_type=(resource.__class__ if check_request_payload else None),
+            check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
         )
 
@@ -342,7 +343,8 @@ class SCIMClient:
             expected_status_codes=(
                 self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(expected_type if check_response_payload else None),
+            expected_type=expected_type,
+            check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
@@ -412,11 +414,8 @@ class SCIMClient:
             expected_status_codes=(
                 self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(
-                ListResponse[Union[self.resource_types]]
-                if check_response_payload
-                else None
-            ),
+            expected_type=(ListResponse[Union[self.resource_types]]),
+            check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
@@ -484,20 +483,26 @@ class SCIMClient:
             expected_status_codes=(
                 self.SEARCH_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(
-                ListResponse[Union[self.resource_types]]
-                if check_response_payload
-                else None
-            ),
+            expected_type=(ListResponse[Union[self.resource_types]]),
+            check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
     def delete(
-        self, resource_type: Type, id: str, check_status_code: bool = True, **kwargs
+        self,
+        resource_type: Type,
+        id: str,
+        check_response_payload: bool = True,
+        check_status_code: bool = True,
+        **kwargs,
     ) -> Optional[Union[Error, Dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
         <7644#section-3.6>`.
 
+        :param resource_type: The type of the resource to delete.
+        :param id: The type id the resource to delete.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
@@ -523,9 +528,10 @@ class SCIMClient:
 
         return self.check_response(
             response=response,
-            expected_status_codes=self.DELETION_RESPONSE_STATUS_CODES
-            if check_status_code
-            else None,
+            expected_status_codes=(
+                self.DELETION_RESPONSE_STATUS_CODES if check_status_code else None
+            ),
+            check_response_payload=check_response_payload,
         )
 
     def replace(
@@ -608,11 +614,8 @@ class SCIMClient:
             expected_status_codes=(
                 self.REPLACEMENT_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(
-                resource.__class__
-                if check_request_payload and check_response_payload
-                else None
-            ),
+            expected_type=(resource.__class__ if check_request_payload else None),
+            check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
         )
 
