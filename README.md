@@ -6,6 +6,13 @@ following the [RFC7643](https://datatracker.ietf.org/doc/html/rfc7643.html) and 
 
 It aims to be used in SCIM client applications, or in unit tests for SCIM server applications.
 
+## What's SCIM anyway?
+
+SCIM stands for System for Cross-domain Identity Management, and it is a provisioning protocol.
+Provisioning is the action of managing a set of resources across different services, usually users and groups.
+SCIM is often used between Identity Providers and applications in completion of standards like OAuth2 and OpenID Connect.
+It allows users and groups creations, modifications and deletions to be synchronized between applications.
+
 ## Installation
 
 ```shell
@@ -48,3 +55,8 @@ response = scim.create(user)
 assert isinstance(response, Error)
 assert response.detail == "One or more of the attribute values are already in use or are reserved."
 ```
+
+scim2-client belongs in a collection of SCIM tools developed by [Yaal Coop](https://yaal.coop),
+with [scim2-models](https://github.com/yaal-coop/scim2-models),
+[scim2-tester](https://github.com/yaal-coop/scim2-tester) and
+[scim2-cli](https://github.com/yaal-coop/scim2-cli)
