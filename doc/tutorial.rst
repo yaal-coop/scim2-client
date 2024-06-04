@@ -11,12 +11,11 @@ In addition to your SCIM server root endpoint, you will probably want to provide
 .. code-block:: python
 
     from httpx import Client
-    from scim2_models import User, EnterpriseUserUser, Group, Error
+    from scim2_models import User, EnterpriseUserUser, Group
     from scim2_client import SCIMClient
 
-    client = Client(base_url=f"https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-    resource_types=[User[EnterpriseUser], Group]
-    scim = SCIMClient(client, resource_types=resource_types)
+    client = Client(base_url="https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
+    scim = SCIMClient(client, resource_types=(User[EnterpriseUser], Group))
 
 You need to give to indicate to :class:`~scim2_client.SCIMClient` all the different :class:`~scim2_models.Resource` types that you will need to manipulate with the :code:`resource_types` parameter.
 This is needed so scim2-client will be able to guess which resource type to instante when an arbitrary payload is met.
@@ -25,7 +24,6 @@ This is needed so scim2-client will be able to guess which resource type to inst
 
     We plan to implement the automatic discovery of SCIM server resources,
     so they can dynamically be used without explicitly passing them with the :code:`resource_types` parameter.
-
 
 Performing actions
 ==================
@@ -42,6 +40,8 @@ The following actions are available:
 Have a look at the :doc:`reference` to see usage examples and the exhaustive set of parameters, but generally it looks like this:
 
 .. code-block:: python
+
+    from scim2_models import Error
 
     request = User(user_name="bjensen@example.com")
     response = scim.create(request)
@@ -76,3 +76,13 @@ To achieve this, all the methods provide the following parameters, all are :data
    Check the request :class:`Contexts <scim2_models.Context>` to understand
    which value will excluded from the request payload, and which values are
    expected in the response payload.
+
+Additional request parameters
+=============================
+
+Any additional parameter will be passed to the underlying httpx methods.
+This can be usefull if you need to explicitly pass a certain URL for example:
+
+.. code-block:: python
+
+   scim.query(url="/User/i-know-what-im-doing")

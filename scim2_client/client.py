@@ -23,6 +23,7 @@ from scim2_models import ServiceProviderConfig
 
 from .errors import SCIMClientError
 from .errors import SCIMRequestError
+from .errors import SCIMResponseError
 from .errors import UnexpectedContentFormat
 from .errors import UnexpectedContentType
 from .errors import UnexpectedStatusCode
@@ -139,7 +140,7 @@ class SCIMClient:
         self,
         response: Response,
         expected_status_codes: List[int],
-        expected_type: Optional[Type] = None,
+        expected_types: Optional[Type] = None,
         check_response_payload: bool = True,
         scim_ctx: Optional[Context] = None,
     ):
@@ -178,11 +179,23 @@ class SCIMClient:
         except ValidationError:
             pass
 
-        if not expected_type:
+        if not expected_types:
             return response_payload
 
+        actual_type = Resource.get_by_payload(
+            expected_types, response_payload, with_extensions=False
+        )
+
+        if not actual_type:
+            expected = ", ".join([type.__name__ for type in expected_types])
+            schema = ", ".join(response_payload.get("schemas", []))
+            raise SCIMResponseError(
+                f"Expected type {expected} but got unknow resource with schemas: {schema}",
+                response=response,
+            )
+
         try:
-            return expected_type.model_validate(response_payload, scim_ctx=scim_ctx)
+            return actual_type.model_validate(response_payload, scim_ctx=scim_ctx)
         except ValidationError as exc:
             exc.response_payload = response_payload
             raise exc
@@ -258,7 +271,7 @@ class SCIMClient:
             expected_status_codes=(
                 self.CREATION_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(resource.__class__ if check_request_payload else None),
+            expected_types=([resource.__class__] if check_request_payload else None),
             check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
         )
@@ -350,22 +363,25 @@ class SCIMClient:
                 else None
             )
 
-        url = self.resource_endpoint(resource_type)
+        url = kwargs.pop("url", self.resource_endpoint(resource_type))
 
         if resource_type is None:
-            expected_type = ListResponse[Union[self.resource_types]]
+            expected_types = [
+                *self.resource_types,
+                ListResponse[Union[self.resource_types]],
+            ]
 
         elif resource_type == ServiceProviderConfig:
-            expected_type = resource_type
+            expected_types = [resource_type]
             if id:
                 raise SCIMClientError("ServiceProviderConfig cannot have an id")
 
         elif id:
-            expected_type = resource_type
+            expected_types = [resource_type]
             url = f"{url}/{id}"
 
         else:
-            expected_type = ListResponse[resource_type]
+            expected_types = [ListResponse[resource_type]]
 
         response = self.client.get(url, params=payload, **kwargs)
         return self.check_response(
@@ -373,7 +389,7 @@ class SCIMClient:
             expected_status_codes=(
                 self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=expected_type,
+            expected_types=expected_types,
             check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
@@ -435,14 +451,15 @@ class SCIMClient:
                 else None
             )
 
-        response = self.client.post("/.search", json=payload)
+        url = kwargs.pop("url", "/.search")
+        response = self.client.post(url, json=payload)
 
         return self.check_response(
             response=response,
             expected_status_codes=(
                 self.SEARCH_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(ListResponse[Union[self.resource_types]]),
+            expected_types=[ListResponse[Union[self.resource_types]]],
             check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
@@ -482,7 +499,8 @@ class SCIMClient:
         """
 
         self.check_resource_type(resource_type)
-        url = self.resource_endpoint(resource_type) + f"/{id}"
+        delete_url = self.resource_endpoint(resource_type) + f"/{id}"
+        url = kwargs.pop("url", delete_url)
         response = self.client.delete(url, **kwargs)
 
         return self.check_response(
@@ -573,7 +591,7 @@ class SCIMClient:
             expected_status_codes=(
                 self.REPLACEMENT_RESPONSE_STATUS_CODES if check_status_code else None
             ),
-            expected_type=(resource.__class__ if check_request_payload else None),
+            expected_types=([resource.__class__] if check_request_payload else None),
             check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
         )

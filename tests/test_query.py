@@ -19,6 +19,7 @@ from scim2_client.client import UnexpectedContentFormat
 from scim2_client.client import UnexpectedContentType
 from scim2_client.client import UnexpectedStatusCode
 from scim2_client.errors import SCIMClientError
+from scim2_client.errors import SCIMResponseError
 
 
 @pytest.fixture
@@ -356,6 +357,29 @@ def test_all_users(client):
     )
 
 
+def test_custom_url(client):
+    """Test that querying by passing the 'url' parameter directly to httpx is
+    accepted."""
+
+    scim_client = SCIMClient(client, resource_types=(User, Group))
+    response = scim_client.query(url="/Users/2819c223-7f76-453a-919d-413861904646")
+    assert response == User(
+        id="2819c223-7f76-453a-919d-413861904646",
+        user_name="bjensen@example.com",
+        meta=Meta(
+            resource_type="User",
+            created=datetime.datetime(
+                2010, 1, 23, 4, 56, 22, tzinfo=datetime.timezone.utc
+            ),
+            last_modified=datetime.datetime(
+                2011, 5, 13, 4, 42, 34, tzinfo=datetime.timezone.utc
+            ),
+            version='W\\/"3694e05e9dff590"',
+            location="https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+        ),
+    )
+
+
 def test_no_result(client):
     """Test querying a resource with no object."""
 
@@ -402,7 +426,10 @@ def test_bad_resource_type(client):
     ValidationError."""
 
     scim_client = SCIMClient(client, resource_types=(User,))
-    with pytest.raises(ValidationError):
+    with pytest.raises(
+        SCIMResponseError,
+        match="Expected type User but got unknow resource with schemas: urn:ietf:params:scim:schemas:core:2.0:Group",
+    ):
         scim_client.query(User, "its-a-group")
 
 

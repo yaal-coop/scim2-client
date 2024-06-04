@@ -10,6 +10,7 @@ Added
 - Implement :meth:`~scim2_client.SCIMClient.delete` `check_response_payload` attribute.
 - :class:`~scim2_models.ServiceProviderConfig`, :class:`~scim2_models.ResourceType`
   and :class:`~scim2_models.Schema` are added to the default resource types list.
+- Any custom URL can be used with all the :class:`~scim2_client.SCIMClient` methods.
 
 Fixed
 ^^^^^
