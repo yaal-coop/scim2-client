@@ -417,7 +417,7 @@ def test_all(client):
             Group,
         ),
     )
-    response = scim_client.query_all()
+    response = scim_client.query()
     assert isinstance(response, ListResponse)
     assert response.total_results == 2
     user, group = response.resources
@@ -431,7 +431,7 @@ def test_all_unexpected_type(client):
 
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(ValidationError):
-        scim_client.query_all()
+        scim_client.query()
 
 
 def test_response_is_not_json(client):
@@ -575,47 +575,6 @@ def test_query_dont_check_request_payload(httpserver, client):
     response = scim_client.query(User, "with-qs", req, check_request_payload=False)
     assert isinstance(response, User)
     assert response.id == "with-qs"
-
-
-def test_query_all_dont_check_request_payload(httpserver, client):
-    """Test the check_request_payload attribute on query_all."""
-
-    query_string = "attributes=userName&attributes=displayName&excluded_attributes=timezone&excluded_attributes=phoneNumbers&filter=userName%20Eq%20%22john%22&sort_by=userName&sort_order=ascending&start_index=1&count=10"
-
-    httpserver.expect_request("/", query_string=query_string).respond_with_json(
-        {
-            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
-            "id": "with-qs",
-            "userName": "bjensen@example.com",
-            "meta": {
-                "resourceType": "User",
-                "created": "2010-01-23T04:56:22Z",
-                "lastModified": "2011-05-13T04:42:34Z",
-                "version": 'W\\/"3694e05e9dff590"',
-                "location": "https://example.com/v2/Users/with-qs",
-            },
-        },
-        status=200,
-    )
-    req = {
-        "attributes": ["userName", "displayName"],
-        "excluded_attributes": ["timezone", "phoneNumbers"],
-        "filter": 'userName Eq "john"',
-        "sort_by": "userName",
-        "sort_order": SortOrder.ascending.value,
-        "start_index": 1,
-        "count": 10,
-    }
-
-    scim_client = SCIMClient(
-        client,
-        resource_types=(
-            User,
-            Group,
-        ),
-    )
-    response = scim_client.query_all(req, check_request_payload=False)
-    assert isinstance(response, ListResponse)
 
 
 def test_invalid_resource_type(httpserver):

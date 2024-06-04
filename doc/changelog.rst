@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Changed
+^^^^^^^
+- Merge :meth:`~scim2_client.SCIMClient.query` and :meth:`~scim2_client.SCIMClient.query_all`.
+
 Added
 ^^^^^
 - Implement :meth:`~scim2_client.SCIMClient.delete` `check_response_payload` attribute.

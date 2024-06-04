@@ -107,6 +107,9 @@ class SCIMClient:
             raise SCIMRequestError(f"Unknown resource type: '{resource_type}'")
 
     def resource_endpoint(self, resource_type: Type):
+        if resource_type is None:
+            return "/"
+
         # This one takes no final 's'
         if resource_type is ServiceProviderConfig:
             return "/ServiceProviderConfig"
@@ -248,7 +251,7 @@ class SCIMClient:
 
     def query(
         self,
-        resource_type: Type,
+        resource_type: Optional[Type] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, Dict]] = None,
         check_request_payload: bool = True,
@@ -301,6 +304,14 @@ class SCIMClient:
             response = scim.query(User, search_request=search_request)
             # 'response' may be a ListResponse[User] or an Error object
 
+        .. code-block:: python
+            :caption: Query of all the available resources
+
+            from scim2_models import User, SearchRequest
+
+            response = scim.query()
+            # 'response' may be a ListResponse[Union[User, Group, ...]] or an Error object
+
         .. tip::
 
             Check the :attr:`~scim2_models.Context.RESOURCE_QUERY_REQUEST`
@@ -309,7 +320,9 @@ class SCIMClient:
             the response payload.
         """
 
-        self.check_resource_type(resource_type)
+        if resource_type and check_request_payload:
+            self.check_resource_type(resource_type)
+
         if not check_request_payload:
             payload = search_request
 
@@ -325,7 +338,10 @@ class SCIMClient:
 
         url = self.resource_endpoint(resource_type)
 
-        if resource_type == ServiceProviderConfig:
+        if resource_type is None:
+            expected_type = ListResponse[Union[self.resource_types]]
+
+        elif resource_type == ServiceProviderConfig:
             expected_type = resource_type
             if id:
                 raise SCIMClientError("ServiceProviderConfig cannot have an id")
@@ -344,77 +360,6 @@ class SCIMClient:
                 self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
             ),
             expected_type=expected_type,
-            check_response_payload=check_response_payload,
-            scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
-        )
-
-    def query_all(
-        self,
-        search_request: Optional[SearchRequest] = None,
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
-        check_status_code: bool = True,
-        **kwargs,
-    ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
-        """Perform a GET request to read all available resources, as defined in
-        :rfc:`RFC7644 §3.4.2.1 <7644#section-3.4.2.1>`.
-
-        :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If :data:`False`,
-            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
-        :param check_status_code: Whether to validate that the response status code is valid.
-        :param kwargs: Additional parameters passed to the underlying
-            HTTP request library.
-
-        :return:
-            - A :class:`~scim2_models.Error` object in case of error.
-            - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
-
-        :usage:
-
-        .. code-block:: python
-            :caption: Query of all the resources filtering the ones with `id` contains with `admin`
-
-            from scim2_models import User, SearchRequest
-
-            req = SearchRequest(filter='filter=id co "john"')
-            response = scim.query_all(search_request=search_request)
-            # 'response' may be a ListResponse[User] or an Error object
-
-        .. tip::
-
-            Check the :attr:`~scim2_models.Context.RESOURCE_QUERY_REQUEST`
-            and :attr:`~scim2_models.Context.RESOURCE_QUERY_RESPONSE` contexts to understand
-            which value will excluded from the request payload, and which values are expected in
-            the response payload.
-        """
-
-        # A query against a server root indicates that all resources within the
-        # server SHALL be included, subject to filtering.
-        # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.4.2.1
-
-        if not check_request_payload:
-            payload = search_request
-
-        else:
-            payload = (
-                search_request.model_dump(
-                    exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_REQUEST
-                )
-                if search_request
-                else None
-            )
-
-        response = self.client.get("/", params=payload)
-
-        return self.check_response(
-            response=response,
-            expected_status_codes=(
-                self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
-            ),
-            expected_type=(ListResponse[Union[self.resource_types]]),
             check_response_payload=check_response_payload,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
