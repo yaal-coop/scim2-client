@@ -7,6 +7,7 @@ from scim2_models import Group
 from scim2_models import Meta
 from scim2_models import User
 
+from scim2_client import RequestPayloadValidationError
 from scim2_client import SCIMClient
 from scim2_client import SCIMClientError
 from scim2_client import SCIMRequestError
@@ -286,3 +287,19 @@ def test_invalid_resource_type(httpserver):
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
         scim_client.create(Group(display_name="foobar"))
+
+
+def test_request_validation_error(httpserver):
+    """Test that incorrect input raise a RequestPayloadValidationError."""
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(
+        RequestPayloadValidationError, match="Server response payload validation error"
+    ):
+        scim_client.create(
+            {
+                "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+                "active": "not-a-bool",
+            }
+        )

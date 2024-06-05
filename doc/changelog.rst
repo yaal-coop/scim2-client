@@ -12,6 +12,7 @@ Added
   and :class:`~scim2_models.Schema` are added to the default resource types list.
 - Any custom URL can be used with all the :class:`~scim2_client.SCIMClient` methods.
 - :class:`~scim2_client.ResponsePayloadValidationError` implementation.
+- :class:`~scim2_client.RequestPayloadValidationError` implementation.
 
 Fixed
 ^^^^^

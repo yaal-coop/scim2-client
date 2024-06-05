@@ -21,6 +21,7 @@ from scim2_models import Schema
 from scim2_models import SearchRequest
 from scim2_models import ServiceProviderConfig
 
+from .errors import RequestPayloadValidationError
 from .errors import ResponsePayloadValidationError
 from .errors import SCIMClientError
 from .errors import SCIMRequestError
@@ -262,7 +263,10 @@ class SCIMClient:
                         "Cannot guess resource type from the payload"
                     )
 
-                resource = resource_type.model_validate(resource)
+                try:
+                    resource = resource_type.model_validate(resource)
+                except ValidationError as exc:
+                    raise RequestPayloadValidationError from exc
 
             self.check_resource_type(resource_type)
             url = kwargs.pop("url", self.resource_endpoint(resource_type))
@@ -576,7 +580,10 @@ class SCIMClient:
                         payload=resource,
                     )
 
-                resource = resource_type.model_validate(resource)
+                try:
+                    resource = resource_type.model_validate(resource)
+                except ValidationError as exc:
+                    raise RequestPayloadValidationError from exc
 
             self.check_resource_type(resource_type)
 

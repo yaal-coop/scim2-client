@@ -22,6 +22,27 @@ class SCIMRequestError(SCIMClientError):
         super().__init__(*args, **kwargs)
 
 
+class RequestPayloadValidationError(SCIMRequestError):
+    """Error raised when an invalid request payload has been passed to
+    SCIMClient.
+
+    This errors are raised when a :class:`pydantic.ValidationError` has been catched
+    while validating the client request payload.
+    The original :class:`~pydantic.ValidationError` is available with :attr:`~BaseException.__cause__`.
+
+    .. code-block:: python
+
+        try:
+            scim.create({"schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"], "active": "not-a-bool"})
+        except RequestPayloadValidationError as exc:
+            print("Original validation error cause", exc.__cause__)
+    """
+
+    def __init__(self, *args, **kwargs):
+        message = kwargs.pop("message", "Server response payload validation error")
+        super().__init__(message, *args, **kwargs)
+
+
 class SCIMResponseError(SCIMClientError):
     """Base exception for errors happening during response payload
     validation."""
