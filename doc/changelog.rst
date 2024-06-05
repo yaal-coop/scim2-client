@@ -1,6 +1,9 @@
 Changelog
 =========
 
+[0.1.5] - 2024-06-05
+--------------------
+
 Changed
 ^^^^^^^
 - Merge :meth:`~scim2_client.SCIMClient.query` and :meth:`~scim2_client.SCIMClient.query_all`.
