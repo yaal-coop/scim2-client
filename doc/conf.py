@@ -60,6 +60,7 @@ html_theme_options = {
             "title": "scim2-cli",
             "url": "https://scim2-cli.readthedocs.io",
         },
+        {"title": "scim2-tester", "url": "https://scim2-tester.readthedocs.io"},
     ],
 }
 html_context = {
