@@ -1,13 +1,17 @@
 from typing import Any
 
-from httpx import Response
-
 
 class SCIMClientError(Exception):
-    """Base exception for scim2-client."""
+    """Base exception for scim2-client.
 
-    def __init__(self, message: str, *args, **kwargs):
+    :param message: The exception reason.
+    :param source: The request payload or the response object that have
+        caused the exception.
+    """
+
+    def __init__(self, message: str, source: Any = None, *args, **kwargs):
         self.message = message
+        self.source = source
         super().__init__(*args, **kwargs)
 
     def __str__(self):
@@ -16,10 +20,6 @@ class SCIMClientError(Exception):
 
 class SCIMRequestError(SCIMClientError):
     """Base exception for errors happening during request payload building."""
-
-    def __init__(self, *args, payload: Any = None, **kwargs):
-        self.payload = payload
-        super().__init__(*args, **kwargs)
 
 
 class RequestNetworkError(SCIMRequestError):
@@ -59,10 +59,6 @@ class SCIMResponseError(SCIMClientError):
     """Base exception for errors happening during response payload
     validation."""
 
-    def __init__(self, *args, response: Response, **kwargs):
-        self.response = response
-        super().__init__(*args, **kwargs)
-
 
 class UnexpectedStatusCode(SCIMResponseError):
     """Error raised when a server returned an unexpected status code for a
@@ -71,7 +67,7 @@ class UnexpectedStatusCode(SCIMResponseError):
     def __init__(self, *args, **kwargs):
         message = kwargs.pop(
             "message",
-            f"Unexpected response status code: {kwargs['response'].status_code}",
+            f"Unexpected response status code: {kwargs['source'].status_code}",
         )
         super().__init__(message, *args, **kwargs)
 
@@ -81,7 +77,7 @@ class UnexpectedContentType(SCIMResponseError):
     in a response."""
 
     def __init__(self, *args, **kwargs):
-        content_type = kwargs["response"].headers.get("content-type", "")
+        content_type = kwargs["source"].headers.get("content-type", "")
         message = kwargs.pop("message", f"Unexpected content type: {content_type}")
         super().__init__(message, *args, **kwargs)
 

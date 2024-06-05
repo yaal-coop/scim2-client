@@ -149,7 +149,7 @@ class SCIMClient:
         scim_ctx: Optional[Context] = None,
     ):
         if expected_status_codes and response.status_code not in expected_status_codes:
-            raise UnexpectedStatusCode(response=response)
+            raise UnexpectedStatusCode(source=response)
 
         # Interoperability considerations:  The "application/scim+json" media
         # type is intended to identify JSON structure data that conforms to
@@ -159,7 +159,7 @@ class SCIMClient:
 
         expected_response_content_types = ("application/scim+json", "application/json")
         if response.headers.get("content-type") not in expected_response_content_types:
-            raise UnexpectedContentType(response=response)
+            raise UnexpectedContentType(source=response)
 
         # In addition to returning an HTTP response code, implementers MUST return
         # the errors in the body of the response in a JSON format
@@ -173,7 +173,7 @@ class SCIMClient:
             try:
                 response_payload = response.json()
             except json.decoder.JSONDecodeError as exc:
-                raise UnexpectedContentFormat(response=response) from exc
+                raise UnexpectedContentFormat(source=response) from exc
 
         if not check_response_payload:
             return response_payload
@@ -200,12 +200,12 @@ class SCIMClient:
                     f"Expected type {expected} but got undefined object with no schema"
                 )
 
-            raise SCIMResponseError(message, response=response)
+            raise SCIMResponseError(message, source=response)
 
         try:
             return actual_type.model_validate(response_payload, scim_ctx=scim_ctx)
         except ValidationError as exc:
-            scim_exc = ResponsePayloadValidationError(response=response)
+            scim_exc = ResponsePayloadValidationError(source=response)
             if hasattr(scim_exc, "add_note"):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
@@ -271,7 +271,7 @@ class SCIMClient:
                 try:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
-                    scim_exc = RequestPayloadValidationError(payload=resource)
+                    scim_exc = RequestPayloadValidationError(source=resource)
                     if hasattr(scim_exc, "add_note"):  # pragma: no cover
                         scim_exc.add_note(str(exc))
                     raise scim_exc from exc
@@ -283,7 +283,7 @@ class SCIMClient:
         try:
             response = self.client.post(url, json=payload, **kwargs)
         except RequestError as exc:
-            scim_exc = RequestNetworkError(payload=payload)
+            scim_exc = RequestNetworkError(source=payload)
             if hasattr(scim_exc, "add_note"):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
@@ -408,7 +408,7 @@ class SCIMClient:
         try:
             response = self.client.get(url, params=payload, **kwargs)
         except RequestError as exc:
-            scim_exc = RequestNetworkError(payload=payload)
+            scim_exc = RequestNetworkError(source=payload)
             if hasattr(scim_exc, "add_note"):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
@@ -485,7 +485,7 @@ class SCIMClient:
         try:
             response = self.client.post(url, json=payload)
         except RequestError as exc:
-            scim_exc = RequestNetworkError(payload=payload)
+            scim_exc = RequestNetworkError(source=payload)
             if hasattr(scim_exc, "add_note"):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
@@ -612,13 +612,13 @@ class SCIMClient:
                 if not resource_type:
                     raise SCIMRequestError(
                         "Cannot guess resource type from the payload",
-                        payload=resource,
+                        source=resource,
                     )
 
                 try:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
-                    scim_exc = RequestPayloadValidationError(payload=resource)
+                    scim_exc = RequestPayloadValidationError(source=resource)
                     if hasattr(scim_exc, "add_note"):  # pragma: no cover
                         scim_exc.add_note(str(exc))
                     raise scim_exc from exc
@@ -626,7 +626,7 @@ class SCIMClient:
             self.check_resource_type(resource_type)
 
             if not resource.id:
-                raise SCIMRequestError("Resource must have an id", payload=resource)
+                raise SCIMRequestError("Resource must have an id", source=resource)
 
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST)
             url = kwargs.pop(
@@ -636,7 +636,7 @@ class SCIMClient:
         try:
             response = self.client.put(url, json=payload, **kwargs)
         except RequestError as exc:
-            scim_exc = RequestNetworkError(payload=payload)
+            scim_exc = RequestNetworkError(source=payload)
             if hasattr(scim_exc, "add_note"):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
