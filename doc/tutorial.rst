@@ -70,6 +70,9 @@ To achieve this, all the methods provide the following parameters, all are :data
   If :data:`False` the server response is returned as-is.
 - :code:`check_status_code`: Whether to validate that the response status code is valid.
   If :data:`True` and an unexpected status code is returned, a :class:`~scim2_client.errors.UnexpectedStatusCode` exception is raised.
+- :code:`raise_scim_errors`: If :data:`True` and the server returned an :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject` exception will be raised.
+  If :data:`False` the error object is returned.
+
 
 .. tip::
 
