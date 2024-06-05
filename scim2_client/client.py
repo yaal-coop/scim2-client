@@ -1,5 +1,6 @@
 import json
 import json.decoder
+import sys
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -211,7 +212,7 @@ class SCIMClient:
             return actual_type.model_validate(response_payload, scim_ctx=scim_ctx)
         except ValidationError as exc:
             scim_exc = ResponsePayloadValidationError(source=response)
-            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+            if sys.version_info >= (3, 11):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
 
@@ -281,7 +282,7 @@ class SCIMClient:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
                     scim_exc = RequestPayloadValidationError(source=resource)
-                    if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                    if sys.version_info >= (3, 11):  # pragma: no cover
                         scim_exc.add_note(str(exc))
                     raise scim_exc from exc
 
@@ -293,7 +294,7 @@ class SCIMClient:
             response = self.client.post(url, json=payload, **kwargs)
         except RequestError as exc:
             scim_exc = RequestNetworkError(source=payload)
-            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+            if sys.version_info >= (3, 11):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
 
@@ -423,7 +424,7 @@ class SCIMClient:
             response = self.client.get(url, params=payload, **kwargs)
         except RequestError as exc:
             scim_exc = RequestNetworkError(source=payload)
-            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+            if sys.version_info >= (3, 11):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
 
@@ -505,7 +506,7 @@ class SCIMClient:
             response = self.client.post(url, json=payload)
         except RequestError as exc:
             scim_exc = RequestNetworkError(source=payload)
-            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+            if sys.version_info >= (3, 11):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
 
@@ -566,7 +567,7 @@ class SCIMClient:
             response = self.client.delete(url, **kwargs)
         except RequestError as exc:
             scim_exc = RequestNetworkError()
-            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+            if sys.version_info >= (3, 11):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
 
@@ -648,7 +649,7 @@ class SCIMClient:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
                     scim_exc = RequestPayloadValidationError(source=resource)
-                    if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                    if sys.version_info >= (3, 11):  # pragma: no cover
                         scim_exc.add_note(str(exc))
                     raise scim_exc from exc
 
@@ -666,7 +667,7 @@ class SCIMClient:
             response = self.client.put(url, json=payload, **kwargs)
         except RequestError as exc:
             scim_exc = RequestNetworkError(source=payload)
-            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+            if sys.version_info >= (3, 11):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
 
