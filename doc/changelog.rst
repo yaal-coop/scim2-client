@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Added
+^^^^^
+- :class:`~scim2_client.SCIMResponseErrorObject` implementation.
+
 [0.1.5] - 2024-06-05
 --------------------
 

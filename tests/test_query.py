@@ -21,6 +21,7 @@ from scim2_client.errors import RequestNetworkError
 from scim2_client.errors import ResponsePayloadValidationError
 from scim2_client.errors import SCIMClientError
 from scim2_client.errors import SCIMResponseError
+from scim2_client.errors import SCIMResponseErrorObject
 
 
 @pytest.fixture
@@ -307,6 +308,24 @@ def test_user_with_invalid_id(client):
     )
     response = scim_client.query(User, "unknown")
     assert response == Error(detail="Resource unknown not found", status=404)
+
+
+def test_raise_scim_errors(client):
+    """Test that querying an user with an invalid id instantiate an Error
+    object."""
+
+    scim_client = SCIMClient(
+        client,
+        resource_types=(
+            User,
+            Group,
+        ),
+    )
+    with pytest.raises(
+        SCIMResponseErrorObject,
+        match="The server returned a SCIM Error object: Resource unknown not found",
+    ):
+        scim_client.query(User, "unknown", raise_scim_errors=True)
 
 
 def test_all_users(client):

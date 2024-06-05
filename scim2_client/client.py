@@ -28,6 +28,7 @@ from .errors import ResponsePayloadValidationError
 from .errors import SCIMClientError
 from .errors import SCIMRequestError
 from .errors import SCIMResponseError
+from .errors import SCIMResponseErrorObject
 from .errors import UnexpectedContentFormat
 from .errors import UnexpectedContentType
 from .errors import UnexpectedStatusCode
@@ -146,6 +147,7 @@ class SCIMClient:
         expected_status_codes: List[int],
         expected_types: Optional[Type] = None,
         check_response_payload: bool = True,
+        raise_scim_errors: bool = False,
         scim_ctx: Optional[Context] = None,
     ):
         if expected_status_codes and response.status_code not in expected_status_codes:
@@ -179,7 +181,10 @@ class SCIMClient:
             return response_payload
 
         try:
-            return Error.model_validate(response_payload)
+            error = Error.model_validate(response_payload)
+            if raise_scim_errors:
+                raise SCIMResponseErrorObject(source=error)
+            return error
         except ValidationError:
             pass
 
@@ -216,6 +221,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
+        raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, Error, Dict]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
@@ -228,6 +234,9 @@ class SCIMClient:
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
         :param kwargs: Additional parameters passed to the underlying HTTP request
             library.
 
@@ -295,6 +304,7 @@ class SCIMClient:
             ),
             expected_types=([resource.__class__] if check_request_payload else None),
             check_response_payload=check_response_payload,
+            raise_scim_errors=raise_scim_errors,
             scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
         )
 
@@ -306,6 +316,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
+        raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644
@@ -322,6 +333,9 @@ class SCIMClient:
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
@@ -420,6 +434,7 @@ class SCIMClient:
             ),
             expected_types=expected_types,
             check_response_payload=check_response_payload,
+            raise_scim_errors=raise_scim_errors,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
@@ -429,6 +444,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
+        raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
         """Perform a POST search request to read all available resources, as
@@ -442,6 +458,9 @@ class SCIMClient:
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -497,6 +516,7 @@ class SCIMClient:
             ),
             expected_types=[ListResponse[Union[self.resource_types]]],
             check_response_payload=check_response_payload,
+            raise_scim_errors=raise_scim_errors,
             scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
         )
 
@@ -506,6 +526,7 @@ class SCIMClient:
         id: str,
         check_response_payload: bool = True,
         check_status_code: bool = True,
+        raise_scim_errors: bool = False,
         **kwargs,
     ) -> Optional[Union[Error, Dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
@@ -516,6 +537,9 @@ class SCIMClient:
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -552,6 +576,7 @@ class SCIMClient:
                 self.DELETION_RESPONSE_STATUS_CODES if check_status_code else None
             ),
             check_response_payload=check_response_payload,
+            raise_scim_errors=raise_scim_errors,
         )
 
     def replace(
@@ -560,6 +585,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         check_status_code: bool = True,
+        raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, Error, Dict]:
         """Perform a PUT request to replace a resource, as defined in
@@ -572,6 +598,9 @@ class SCIMClient:
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
         :param check_status_code: Whether to validate that the response status code is valid.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -648,6 +677,7 @@ class SCIMClient:
             ),
             expected_types=([resource.__class__] if check_request_payload else None),
             check_response_payload=check_response_payload,
+            raise_scim_errors=raise_scim_errors,
             scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
         )
 

@@ -60,6 +60,20 @@ class SCIMResponseError(SCIMClientError):
     validation."""
 
 
+class SCIMResponseErrorObject(SCIMResponseError):
+    """The server response returned a :class:`scim2_models.Error` object.
+
+    Those errors are only raised when the :code:`raise_scim_errors` parameter is :data:`True`.
+    """
+
+    def __init__(self, *args, **kwargs):
+        message = kwargs.pop(
+            "message",
+            f"The server returned a SCIM Error object: {kwargs['source'].detail}",
+        )
+        super().__init__(message, *args, **kwargs)
+
+
 class UnexpectedStatusCode(SCIMResponseError):
     """Error raised when a server returned an unexpected status code for a
     given :class:`~scim2_models.Context`."""
