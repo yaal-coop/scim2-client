@@ -59,3 +59,24 @@ class UnexpectedContentFormat(SCIMResponseError):
     def __init__(self, *args, **kwargs):
         message = kwargs.pop("message", "Unexpected response content format")
         super().__init__(message, *args, **kwargs)
+
+
+class ResponsePayloadValidationError(SCIMResponseError):
+    """Error raised when the server returned a payload that cannot be
+    validated.
+
+    This errors are raised when a :class:`pydantic.ValidationError` has been catched
+    while validating the server response payload.
+    The original :class:`~pydantic.ValidationError` is available with :attr:`~BaseException.__cause__`.
+
+    .. code-block:: python
+
+        try:
+            scim.query(User, "foobar")
+        except ResponsePayloadValidationError as exc:
+            print("Original validation error cause", exc.__cause__)
+    """
+
+    def __init__(self, *args, **kwargs):
+        message = kwargs.pop("message", "Server response payload validation error")
+        super().__init__(message, *args, **kwargs)

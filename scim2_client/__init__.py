@@ -1,4 +1,5 @@
 from .client import SCIMClient
+from .errors import ResponsePayloadValidationError
 from .errors import SCIMClientError
 from .errors import SCIMRequestError
 from .errors import SCIMResponseError
@@ -14,4 +15,5 @@ __all__ = [
     "UnexpectedContentFormat",
     "UnexpectedContentType",
     "UnexpectedStatusCode",
+    "ResponsePayloadValidationError",
 ]

@@ -2,7 +2,6 @@ import datetime
 
 import pytest
 from httpx import Client
-from pydantic import ValidationError
 from scim2_models import Error
 from scim2_models import Group
 from scim2_models import ListResponse
@@ -18,6 +17,7 @@ from scim2_client import SCIMRequestError
 from scim2_client.client import UnexpectedContentFormat
 from scim2_client.client import UnexpectedContentType
 from scim2_client.client import UnexpectedStatusCode
+from scim2_client.errors import ResponsePayloadValidationError
 from scim2_client.errors import SCIMClientError
 from scim2_client.errors import SCIMResponseError
 
@@ -423,7 +423,7 @@ def test_resource_unknown_by_server(client):
 
 def test_bad_resource_type(client):
     """Test querying a resource unkown from the client raise a
-    ValidationError."""
+    SCIMResponseError."""
 
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
@@ -454,10 +454,12 @@ def test_all(client):
 
 def test_all_unexpected_type(client):
     """Test retrieving a payload for an object which type has not been passed
-    in parameters raise a ValidationError."""
+    in parameters raise a ResponsePayloadValidationError."""
 
     scim_client = SCIMClient(client, resource_types=(User,))
-    with pytest.raises(ValidationError):
+    with pytest.raises(
+        ResponsePayloadValidationError, match="Server response payload validation error"
+    ):
         scim_client.query()
 
 

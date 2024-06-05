@@ -21,6 +21,7 @@ from scim2_models import Schema
 from scim2_models import SearchRequest
 from scim2_models import ServiceProviderConfig
 
+from .errors import ResponsePayloadValidationError
 from .errors import SCIMClientError
 from .errors import SCIMRequestError
 from .errors import SCIMResponseError
@@ -201,8 +202,7 @@ class SCIMClient:
         try:
             return actual_type.model_validate(response_payload, scim_ctx=scim_ctx)
         except ValidationError as exc:
-            exc.response_payload = response_payload
-            raise exc
+            raise ResponsePayloadValidationError(response=response) from exc
 
     def create(
         self,
