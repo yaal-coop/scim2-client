@@ -7,6 +7,7 @@ from scim2_models import Group
 from scim2_models import Meta
 from scim2_models import User
 
+from scim2_client import RequestNetworkError
 from scim2_client import RequestPayloadValidationError
 from scim2_client import SCIMClient
 from scim2_client import SCIMClientError
@@ -327,3 +328,15 @@ def test_request_validation_error(httpserver):
                 "active": "not-a-bool",
             }
         )
+
+
+def test_request_network_error(httpserver):
+    """Test that httpx exceptions are transformed in RequestNetworkError."""
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    user_request = User(user_name="bjensen@example.com", id="anything")
+    with pytest.raises(
+        RequestNetworkError, match="Network error happened during request"
+    ):
+        scim_client.replace(user_request, url="http://invalid.test")

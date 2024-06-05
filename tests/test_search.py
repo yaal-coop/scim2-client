@@ -10,6 +10,7 @@ from scim2_models import SearchRequest
 from scim2_models import SortOrder
 from scim2_models import User
 
+from scim2_client import RequestNetworkError
 from scim2_client import SCIMClient
 
 
@@ -248,3 +249,14 @@ def test_errors(httpserver, code):
         status=code,
         detail=f"{code} error",
     )
+
+
+def test_request_network_error(httpserver):
+    """Test that httpx exceptions are transformed in RequestNetworkError."""
+
+    client = Client(base_url=f"http://localhost:{httpserver.port}")
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(
+        RequestNetworkError, match="Network error happened during request"
+    ):
+        scim_client.search(url="http://invalid.test")

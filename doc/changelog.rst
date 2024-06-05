@@ -13,6 +13,7 @@ Added
 - Any custom URL can be used with all the :class:`~scim2_client.SCIMClient` methods.
 - :class:`~scim2_client.ResponsePayloadValidationError` implementation.
 - :class:`~scim2_client.RequestPayloadValidationError` implementation.
+- :class:`~scim2_client.RequestNetworkError` implementation.
 
 Fixed
 ^^^^^

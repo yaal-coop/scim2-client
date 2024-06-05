@@ -17,6 +17,7 @@ from scim2_client import SCIMRequestError
 from scim2_client.client import UnexpectedContentFormat
 from scim2_client.client import UnexpectedContentType
 from scim2_client.client import UnexpectedStatusCode
+from scim2_client.errors import RequestNetworkError
 from scim2_client.errors import ResponsePayloadValidationError
 from scim2_client.errors import SCIMClientError
 from scim2_client.errors import SCIMResponseError
@@ -642,3 +643,13 @@ def test_service_provider_config_endpoint_with_an_id(client):
         SCIMClientError, match="ServiceProviderConfig cannot have an id"
     ):
         scim_client.query(ServiceProviderConfig, "dummy")
+
+
+def test_request_network_error(client):
+    """Test that httpx exceptions are transformed in RequestNetworkError."""
+
+    scim_client = SCIMClient(client, resource_types=(User,))
+    with pytest.raises(
+        RequestNetworkError, match="Network error happened during request"
+    ):
+        scim_client.query(url="http://invalid.test")

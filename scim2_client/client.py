@@ -8,6 +8,7 @@ from typing import Type
 from typing import Union
 
 from httpx import Client
+from httpx import RequestError
 from httpx import Response
 from pydantic import ValidationError
 from scim2_models import AnyResource
@@ -21,6 +22,7 @@ from scim2_models import Schema
 from scim2_models import SearchRequest
 from scim2_models import ServiceProviderConfig
 
+from .errors import RequestNetworkError
 from .errors import RequestPayloadValidationError
 from .errors import ResponsePayloadValidationError
 from .errors import SCIMClientError
@@ -203,7 +205,10 @@ class SCIMClient:
         try:
             return actual_type.model_validate(response_payload, scim_ctx=scim_ctx)
         except ValidationError as exc:
-            raise ResponsePayloadValidationError(response=response) from exc
+            scim_exc = ResponsePayloadValidationError(response=response)
+            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                scim_exc.add_note(str(exc))
+            raise scim_exc from exc
 
     def create(
         self,
@@ -266,13 +271,22 @@ class SCIMClient:
                 try:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
-                    raise RequestPayloadValidationError from exc
+                    scim_exc = RequestPayloadValidationError(payload=resource)
+                    if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                        scim_exc.add_note(str(exc))
+                    raise scim_exc from exc
 
             self.check_resource_type(resource_type)
             url = kwargs.pop("url", self.resource_endpoint(resource_type))
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
 
-        response = self.client.post(url, json=payload, **kwargs)
+        try:
+            response = self.client.post(url, json=payload, **kwargs)
+        except RequestError as exc:
+            scim_exc = RequestNetworkError(payload=payload)
+            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                scim_exc.add_note(str(exc))
+            raise scim_exc from exc
 
         return self.check_response(
             response=response,
@@ -391,7 +405,14 @@ class SCIMClient:
         else:
             expected_types = [ListResponse[resource_type]]
 
-        response = self.client.get(url, params=payload, **kwargs)
+        try:
+            response = self.client.get(url, params=payload, **kwargs)
+        except RequestError as exc:
+            scim_exc = RequestNetworkError(payload=payload)
+            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                scim_exc.add_note(str(exc))
+            raise scim_exc from exc
+
         return self.check_response(
             response=response,
             expected_status_codes=(
@@ -460,7 +481,14 @@ class SCIMClient:
             )
 
         url = kwargs.pop("url", "/.search")
-        response = self.client.post(url, json=payload)
+
+        try:
+            response = self.client.post(url, json=payload)
+        except RequestError as exc:
+            scim_exc = RequestNetworkError(payload=payload)
+            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                scim_exc.add_note(str(exc))
+            raise scim_exc from exc
 
         return self.check_response(
             response=response,
@@ -509,7 +537,14 @@ class SCIMClient:
         self.check_resource_type(resource_type)
         delete_url = self.resource_endpoint(resource_type) + f"/{id}"
         url = kwargs.pop("url", delete_url)
-        response = self.client.delete(url, **kwargs)
+
+        try:
+            response = self.client.delete(url, **kwargs)
+        except RequestError as exc:
+            scim_exc = RequestNetworkError()
+            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                scim_exc.add_note(str(exc))
+            raise scim_exc from exc
 
         return self.check_response(
             response=response,
@@ -583,7 +618,10 @@ class SCIMClient:
                 try:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
-                    raise RequestPayloadValidationError from exc
+                    scim_exc = RequestPayloadValidationError(payload=resource)
+                    if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                        scim_exc.add_note(str(exc))
+                    raise scim_exc from exc
 
             self.check_resource_type(resource_type)
 
@@ -595,7 +633,13 @@ class SCIMClient:
                 "url", self.resource_endpoint(resource.__class__) + f"/{resource.id}"
             )
 
-        response = self.client.put(url, json=payload, **kwargs)
+        try:
+            response = self.client.put(url, json=payload, **kwargs)
+        except RequestError as exc:
+            scim_exc = RequestNetworkError(payload=payload)
+            if hasattr(scim_exc, "add_note"):  # pragma: no cover
+                scim_exc.add_note(str(exc))
+            raise scim_exc from exc
 
         return self.check_response(
             response=response,
