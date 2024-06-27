@@ -42,9 +42,9 @@ assert user.meta.last_updated == datetime.datetime(
 )
 
 # Update resources
-user.display_name = "Babes Jensen"
+user.display_name = "Babs Jensen"
 user = scim.replace(user)
-assert user.display_name == "Babes Jensen"
+assert user.display_name == "Babs Jensen"
 assert user.meta.last_updated == datetime.datetime(
     2024, 4, 13, 12, 0, 30, tzinfo=datetime.timezone.utc
 )
