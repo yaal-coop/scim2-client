@@ -63,12 +63,18 @@ class SCIMClient:
         404,
         500,
     ]
-    """Resource creation HTTP codes defined at :rfc:`RFC7644 §3.3
-    <7644#section-3.3>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+    """Resource creation HTTP codes.
+
+    As defined at :rfc:`RFC7644 §3.3 <7644#section-3.3>` and
+    :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
+    """
 
     QUERY_RESPONSE_STATUS_CODES: List[int] = [200, 400, 307, 308, 401, 403, 404, 500]
-    """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.2
-    <7644#section-3.4.2>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+    """Resource querying HTTP codes.
+
+    As defined at :rfc:`RFC7644 §3.4.2 <7644#section-3.4.2>` and
+    :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
+    """
 
     SEARCH_RESPONSE_STATUS_CODES: List[int] = [
         200,
@@ -83,8 +89,11 @@ class SCIMClient:
         500,
         501,
     ]
-    """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.3
-    <7644#section-3.4.3>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+    """Resource querying HTTP codes.
+
+    As defined at :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>` and
+    :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
+    """
 
     DELETION_RESPONSE_STATUS_CODES: List[int] = [
         204,
@@ -98,8 +107,11 @@ class SCIMClient:
         500,
         501,
     ]
-    """Resource deletion HTTP codes defined at :rfc:`RFC7644 §3.6
-    <7644#section-3.6>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+    """Resource deletion HTTP codes.
+
+    As defined at :rfc:`RFC7644 §3.6 <7644#section-3.6>` and
+    :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
+    """
 
     REPLACEMENT_RESPONSE_STATUS_CODES: List[int] = [
         200,
@@ -114,8 +126,11 @@ class SCIMClient:
         500,
         501,
     ]
-    """Resource querying HTTP codes defined at :rfc:`RFC7644 §3.4.2
-    <7644#section-3.4.2>` and :rfc:`RFC7644 §3.12 <7644#section-3.12>`"""
+    """Resource querying HTTP codes.
+
+    As defined at :rfc:`RFC7644 §3.4.2 <7644#section-3.4.2>` and
+    :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
+    """
 
     def __init__(self, client: Client, resource_types: Optional[Tuple[Type]] = None):
         self.client = client
@@ -181,13 +196,14 @@ class SCIMClient:
         if not check_response_payload:
             return response_payload
 
-        try:
+        if (
+            response_payload
+            and response_payload.get("schemas") == Error.model_fields["schemas"].default
+        ):
             error = Error.model_validate(response_payload)
             if raise_scim_errors:
                 raise SCIMResponseErrorObject(source=error)
             return error
-        except ValidationError:
-            pass
 
         if not expected_types:
             return response_payload
@@ -262,7 +278,6 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
-
         if not check_request_payload:
             payload = resource
             url = kwargs.pop("url", None)
@@ -383,7 +398,6 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
-
         if resource_type and check_request_payload:
             self.check_resource_type(resource_type)
 
@@ -487,7 +501,6 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
-
         if not check_request_payload:
             payload = search_request
 
@@ -558,7 +571,6 @@ class SCIMClient:
             response = scim.delete(User, "foobar")
             # 'response' may be None, or an Error object
         """
-
         self.check_resource_type(resource_type)
         delete_url = self.resource_endpoint(resource_type) + f"/{id}"
         url = kwargs.pop("url", delete_url)
@@ -628,7 +640,6 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
-
         if not check_request_payload:
             payload = resource
             url = kwargs.pop("url", None)

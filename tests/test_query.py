@@ -9,7 +9,6 @@ from scim2_models import Meta
 from scim2_models import Resource
 from scim2_models import SearchRequest
 from scim2_models import ServiceProviderConfig
-from scim2_models import SortOrder
 from scim2_models import User
 
 from scim2_client import SCIMClient
@@ -269,7 +268,6 @@ def client(httpserver):
 def test_user_with_valid_id(client):
     """Test that querying an existing user with an id correctly instantiate an
     User object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -298,7 +296,6 @@ def test_user_with_valid_id(client):
 def test_user_with_invalid_id(client):
     """Test that querying an user with an invalid id instantiate an Error
     object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -313,7 +310,6 @@ def test_user_with_invalid_id(client):
 def test_raise_scim_errors(client):
     """Test that querying an user with an invalid id instantiate an Error
     object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -331,7 +327,6 @@ def test_raise_scim_errors(client):
 def test_all_users(client):
     """Test that querying all existing users instantiate a ListResponse
     object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -380,7 +375,6 @@ def test_all_users(client):
 def test_custom_url(client):
     """Test that querying by passing the 'url' parameter directly to httpx is
     accepted."""
-
     scim_client = SCIMClient(client, resource_types=(User, Group))
     response = scim_client.query(url="/Users/2819c223-7f76-453a-919d-413861904646")
     assert response == User(
@@ -402,7 +396,6 @@ def test_custom_url(client):
 
 def test_no_result(client):
     """Test querying a resource with no object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -417,7 +410,6 @@ def test_no_result(client):
 def test_bad_request(client):
     """Test querying a resource unkown from the server instantiate an Error
     object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -444,7 +436,6 @@ def test_resource_unknown_by_server(client):
 def test_bad_resource_type(client):
     """Test querying a resource unkown from the client raise a
     SCIMResponseError."""
-
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
         SCIMResponseError,
@@ -456,7 +447,6 @@ def test_bad_resource_type(client):
 def test_all(client):
     """Test querying all resources from the server instation a ListResponse
     object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -475,7 +465,6 @@ def test_all(client):
 def test_all_unexpected_type(client):
     """Test retrieving a payload for an object which type has not been passed
     in parameters raise a ResponsePayloadValidationError."""
-
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
         ResponsePayloadValidationError, match="Server response payload validation error"
@@ -485,7 +474,6 @@ def test_all_unexpected_type(client):
 
 def test_response_is_not_json(client):
     """Test sitations where servers return an invalid JSON object."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -499,7 +487,6 @@ def test_response_is_not_json(client):
 
 def test_not_a_scim_object(client):
     """Test retrieving a valid JSON object without a schema."""
-
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
         SCIMResponseError,
@@ -510,7 +497,6 @@ def test_not_a_scim_object(client):
 
 def test_dont_check_response_payload(httpserver, client):
     """Test the check_response_payload attribute."""
-
     scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.query(
         User, "not-a-scim-object", check_response_payload=False
@@ -520,7 +506,6 @@ def test_dont_check_response_payload(httpserver, client):
 
 def test_response_bad_status_code(client):
     """Test sitations where servers return an invalid status code."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -535,7 +520,6 @@ def test_response_bad_status_code(client):
 
 def test_response_bad_content_type(client):
     """Test sitations where servers return an invalid content-type response."""
-
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -572,7 +556,7 @@ def test_search_request(httpserver, client):
         excluded_attributes=["timezone", "phoneNumbers"],
         filter='userName Eq "john"',
         sort_by="userName",
-        sort_order=SortOrder.ascending,
+        sort_order=SearchRequest.SortOrder.ascending,
         start_index=1,
         count=10,
     )
@@ -591,7 +575,6 @@ def test_search_request(httpserver, client):
 
 def test_query_dont_check_request_payload(httpserver, client):
     """Test the check_request_payload attribute on query."""
-
     query_string = "attributes=userName&attributes=displayName&excluded_attributes=timezone&excluded_attributes=phoneNumbers&filter=userName%20Eq%20%22john%22&sort_by=userName&sort_order=ascending&start_index=1&count=10"
 
     httpserver.expect_request(
@@ -616,7 +599,7 @@ def test_query_dont_check_request_payload(httpserver, client):
         "excluded_attributes": ["timezone", "phoneNumbers"],
         "filter": 'userName Eq "john"',
         "sort_by": "userName",
-        "sort_order": SortOrder.ascending.value,
+        "sort_order": SearchRequest.SortOrder.ascending.value,
         "start_index": 1,
         "count": 10,
     }
@@ -636,7 +619,6 @@ def test_query_dont_check_request_payload(httpserver, client):
 def test_invalid_resource_type(httpserver):
     """Test that resource_types passed to the method must be part of
     SCIMClient.resource_types."""
-
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
@@ -646,7 +628,6 @@ def test_invalid_resource_type(httpserver):
 def test_service_provider_config_endpoint(client):
     """Test that querying the /ServiceProviderConfig enpdoint correctly returns
     a ServiceProviderConfig (and not a ListResponse)."""
-
     scim_client = SCIMClient(client, resource_types=(ServiceProviderConfig,))
     response = scim_client.query(ServiceProviderConfig)
     assert isinstance(response, ServiceProviderConfig)
@@ -655,7 +636,6 @@ def test_service_provider_config_endpoint(client):
 def test_service_provider_config_endpoint_with_an_id(client):
     """Test that querying the /ServiceProviderConfig with an id raise an
     exception."""
-
     scim_client = SCIMClient(client, resource_types=(ServiceProviderConfig,))
 
     with pytest.raises(
@@ -666,7 +646,6 @@ def test_service_provider_config_endpoint_with_an_id(client):
 
 def test_request_network_error(client):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
-
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
         RequestNetworkError, match="Network error happened during request"

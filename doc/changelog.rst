@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Fixed
+^^^^^
+- Support for scim2-models 0.1.8
+
 [0.1.6] - 2024-06-05
 --------------------
 

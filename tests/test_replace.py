@@ -16,7 +16,6 @@ from scim2_client import SCIMRequestError
 
 def test_replace_user(httpserver):
     """Nominal case for a User creation object."""
-
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json(
@@ -60,7 +59,6 @@ def test_replace_user(httpserver):
 
 def test_replace_user_dict(httpserver):
     """Nominal case for a User creation object by passing a dict."""
-
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json(
@@ -105,7 +103,6 @@ def test_replace_user_dict(httpserver):
 def test_replace_user_dict_bad_schema(httpserver):
     """Test case for a User creation object by passing a dict with an invalid
     or missing schema."""
-
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json(
@@ -140,7 +137,6 @@ def test_replace_user_dict_bad_schema(httpserver):
 
 def test_dont_check_response_payload(httpserver):
     """Test the check_response_payload_attribute."""
-
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json({"foo": "bar"}, status=200)
@@ -172,7 +168,6 @@ def test_dont_check_request_payload(httpserver):
 
     TODO: Actually check that the payload is sent through the network
     """
-
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json(
@@ -221,7 +216,6 @@ def test_dont_check_request_payload(httpserver):
 @pytest.mark.parametrize("code", [400, 401, 403, 404, 409, 412, 500, 501])
 def test_errors(httpserver, code):
     """Test error cases defined in RFC7644."""
-
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json(
@@ -263,7 +257,6 @@ def test_errors(httpserver, code):
 
 def test_user_with_no_id(httpserver):
     """Test that replacing an user object without and id raises an error."""
-
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json(
@@ -307,7 +300,6 @@ def test_user_with_no_id(httpserver):
 def test_invalid_resource_type(httpserver):
     """Test that resource_types passed to the method must be part of
     SCIMClient.resource_types."""
-
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
@@ -316,7 +308,6 @@ def test_invalid_resource_type(httpserver):
 
 def test_request_validation_error(httpserver):
     """Test that incorrect input raise a RequestPayloadValidationError."""
-
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
@@ -332,7 +323,6 @@ def test_request_validation_error(httpserver):
 
 def test_request_network_error(httpserver):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
-
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     user_request = User(user_name="bjensen@example.com", id="anything")

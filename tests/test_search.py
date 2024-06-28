@@ -7,7 +7,6 @@ from scim2_models import Group
 from scim2_models import ListResponse
 from scim2_models import Meta
 from scim2_models import SearchRequest
-from scim2_models import SortOrder
 from scim2_models import User
 
 from scim2_client import RequestNetworkError
@@ -124,7 +123,7 @@ def test_search_request(httpserver):
         excluded_attributes=["timezone", "phoneNumbers"],
         filter='userName Eq "john"',
         sort_by="userName",
-        sort_order=SortOrder.ascending,
+        sort_order=SearchRequest.SortOrder.ascending,
         start_index=1,
         count=10,
     )
@@ -145,7 +144,6 @@ def test_search_request(httpserver):
 
 def test_dont_check_response(httpserver):
     """Test the check_response_payload_attribute."""
-
     httpserver.expect_request("/.search", method="POST").respond_with_json(
         {"foo": "bar"}, status=200
     )
@@ -155,7 +153,7 @@ def test_dont_check_response(httpserver):
         excluded_attributes=["timezone", "phoneNumbers"],
         filter='userName Eq "john"',
         sort_by="userName",
-        sort_order=SortOrder.ascending,
+        sort_order=SearchRequest.SortOrder.ascending,
         start_index=1,
         count=10,
     )
@@ -177,7 +175,6 @@ def test_dont_check_request_payload(httpserver):
 
     TODO: Actually check that the payload is sent through the network
     """
-
     httpserver.expect_request("/.search", method="POST").respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
@@ -204,7 +201,7 @@ def test_dont_check_request_payload(httpserver):
         "excluded_attributes": ["timezone", "phoneNumbers"],
         "filter": 'userName Eq "john"',
         "sort_by": "userName",
-        "sort_order": SortOrder.ascending.value,
+        "sort_order": SearchRequest.SortOrder.ascending.value,
         "start_index": 1,
         "count": 10,
     }
@@ -224,7 +221,6 @@ def test_dont_check_request_payload(httpserver):
 @pytest.mark.parametrize("code", [400, 401, 403, 404, 409, 413, 500, 501])
 def test_errors(httpserver, code):
     """Test error cases defined in RFC7644."""
-
     httpserver.expect_request("/.search", method="POST").respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
@@ -253,7 +249,6 @@ def test_errors(httpserver, code):
 
 def test_request_network_error(httpserver):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
-
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
