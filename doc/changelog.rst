@@ -1,6 +1,9 @@
 Changelog
 =========
 
+[0.1.9] - 2024-06-30
+--------------------
+
 Changed
 ^^^^^^^
 - Fix httpx dependency versions.
