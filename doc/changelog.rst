@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Changed
+^^^^^^^
+- Lower the httpx dependency to 0.24.0
+
 [0.1.7] - 2024-06-28
 --------------------
 Fixed
