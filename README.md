@@ -28,14 +28,14 @@ Here is an example of usage:
 ```python
 import datetime
 from httpx import Client
-from scim2_models import User, EnterpriseUserUser, Group, Error
+from scim2_models import User, EnterpriseUser, Group, Error
 from scim2_client import SCIMClient
 
 client = Client(base_url=f"https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
 scim = SCIMClient(client, resource_types=(User[EnterpriseUser], Group))
 
 # Query resources
-user = scim.query(User, "2819c223-7f76-453a-919d-413861904646")
+user = scim.query(User[EnterpriseUser], "2819c223-7f76-453a-919d-413861904646")
 assert user.user_name == "bjensen@example.com"
 assert user.meta.last_updated == datetime.datetime(
     2024, 4, 13, 12, 0, 0, tzinfo=datetime.timezone.utc
