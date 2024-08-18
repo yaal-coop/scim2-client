@@ -54,7 +54,7 @@ def test_replace_user(httpserver):
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.replace(user)
-    assert response == user
+    assert response.model_dump() == user.model_dump()
 
 
 def test_replace_user_dict(httpserver):
@@ -97,7 +97,7 @@ def test_replace_user_dict(httpserver):
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     response = scim_client.replace(user.model_dump())
-    assert response == user
+    assert response.model_dump() == user.model_dump()
 
 
 def test_replace_user_dict_bad_schema(httpserver):
