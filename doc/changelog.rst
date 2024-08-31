@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[0.1.11] - Unreleased
+---------------------
+
+Fixed
+^^^^^^^
+- Support for content-types with charset information. #18 #19
+
 [0.1.10] - 2024-08-18
 ---------------------
 
