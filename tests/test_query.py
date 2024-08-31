@@ -85,6 +85,23 @@ def httpserver(httpserver):
         {"foo": "bar"}, status=200, content_type="application/scim+json"
     )
 
+    httpserver.expect_request("/Users/content-type-with-charset").respond_with_json(
+        {
+            "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+            "id": "2819c223-7f76-453a-919d-413861904646",
+            "userName": "bjensen@example.com",
+            "meta": {
+                "resourceType": "User",
+                "created": "2010-01-23T04:56:22Z",
+                "lastModified": "2011-05-13T04:42:34Z",
+                "version": 'W\\/"3694e05e9dff590"',
+                "location": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+            },
+        },
+        status=200,
+        content_type="application/scim+json; charset=utf-8",
+    )
+
     httpserver.expect_request("/Users/bad-content-type").respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -516,6 +533,14 @@ def test_response_bad_status_code(client):
     with pytest.raises(UnexpectedStatusCode):
         scim_client.query(User, "status-201")
     scim_client.query(User, "status-201", check_status_code=False)
+
+
+def test_response_content_type_with_charset(client):
+    """Test sitations where servers return a valid content-type with a charset
+    information."""
+    scim_client = SCIMClient(client, resource_types=(User, Group))
+    user = scim_client.query(User, "content-type-with-charset")
+    assert isinstance(user, User)
 
 
 def test_response_bad_content_type(client):
