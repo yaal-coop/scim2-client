@@ -292,7 +292,9 @@ def test_user_with_valid_id(client):
             Group,
         ),
     )
-    response = scim_client.query(User, "2819c223-7f76-453a-919d-413861904646")
+    response = scim_client.query(
+        User, "2819c223-7f76-453a-919d-413861904646", raise_scim_errors=False
+    )
     assert response == User(
         id="2819c223-7f76-453a-919d-413861904646",
         user_name="bjensen@example.com",
@@ -320,7 +322,7 @@ def test_user_with_invalid_id(client):
             Group,
         ),
     )
-    response = scim_client.query(User, "unknown")
+    response = scim_client.query(User, "unknown", raise_scim_errors=False)
     assert response == Error(detail="Resource unknown not found", status=404)
 
 
@@ -434,7 +436,7 @@ def test_bad_request(client):
             Group,
         ),
     )
-    response = scim_client.query(User, "bad-request")
+    response = scim_client.query(User, "bad-request", raise_scim_errors=False)
     assert response == Error(status=400, detail="Bad request")
 
 
@@ -446,7 +448,7 @@ def test_resource_unknown_by_server(client):
         pass
 
     scim_client = SCIMClient(client, resource_types=(Foobar,))
-    response = scim_client.query(Foobar)
+    response = scim_client.query(Foobar, raise_scim_errors=False)
     assert response == Error(status=404, detail="Invalid Resource")
 
 

@@ -163,7 +163,7 @@ class SCIMClient:
         expected_status_codes: List[int],
         expected_types: Optional[Type] = None,
         check_response_payload: bool = True,
-        raise_scim_errors: bool = False,
+        raise_scim_errors: bool = True,
         scim_ctx: Optional[Context] = None,
     ):
         if expected_status_codes and response.status_code not in expected_status_codes:
@@ -241,7 +241,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         expected_status_codes: Optional[List[int]] = CREATION_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = False,
+        raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, Dict]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
@@ -334,7 +334,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         expected_status_codes: Optional[List[int]] = QUERY_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = False,
+        raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644
@@ -460,7 +460,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         expected_status_codes: Optional[List[int]] = SEARCH_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = False,
+        raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
         """Perform a POST search request to read all available resources, as
@@ -540,7 +540,7 @@ class SCIMClient:
         id: str,
         check_response_payload: bool = True,
         expected_status_codes: Optional[List[int]] = DELETION_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = False,
+        raise_scim_errors: bool = True,
         **kwargs,
     ) -> Optional[Union[Error, Dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
@@ -597,7 +597,7 @@ class SCIMClient:
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         expected_status_codes: Optional[List[int]] = REPLACEMENT_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = False,
+        raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, Dict]:
         """Perform a PUT request to replace a resource, as defined in

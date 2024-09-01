@@ -8,6 +8,10 @@ Added
 ^^^^^
 - Replace :code:`check_status_code` parameter by :code:`expected_status_codes`.
 
+Changed
+^^^^^^^
+- :code:`raise_scim_errors` is :data:`True` by default.
+
 [0.1.11] - 2024-08-31
 ---------------------
 

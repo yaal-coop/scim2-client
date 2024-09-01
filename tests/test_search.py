@@ -238,7 +238,7 @@ def test_errors(httpserver, code):
             Group,
         ),
     )
-    response = scim_client.search()
+    response = scim_client.search(raise_scim_errors=False)
 
     assert response == Error(
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],

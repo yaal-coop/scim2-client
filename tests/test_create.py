@@ -211,7 +211,7 @@ def test_conflict(httpserver):
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
-    response = scim_client.create(user_request)
+    response = scim_client.create(user_request, raise_scim_errors=False)
     assert response == Error(
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
         status=409,
@@ -264,7 +264,7 @@ def test_errors(httpserver, code):
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
-    response = scim_client.create(user_request)
+    response = scim_client.create(user_request, raise_scim_errors=False)
 
     assert response == Error(
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
