@@ -9,7 +9,7 @@ description = "Pythonically build SCIM requests and parse SCIM responses"
 authors = ["Yaal Coop <contact@yaal.coop>"]
 license = "MIT"
 readme = "README.md"
-keywords = ["scim", "scim2", "provisioning", "httpx", "api"]
+keywords = ["scim", "scim2", "provisioning", "rfc7643", "rfc7644", "httpx", "api"]
 classifiers = [
     "Intended Audience :: Developers",
     "Development Status :: 3 - Alpha",
@@ -23,6 +23,10 @@ classifiers = [
     "Programming Language :: Python",
     "Operating System :: OS Independent",
 ]
+
+[tool.poetry.urls]
+changelog = "https://scim2-client.readthedocs.io/en/latest/changelog.html"
+funding = "https://github.com/sponsors/yaal-coop"
 
 [tool.poetry.dependencies]
 python = "^3.9"
