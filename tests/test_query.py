@@ -532,7 +532,7 @@ def test_response_bad_status_code(client):
     )
     with pytest.raises(UnexpectedStatusCode):
         scim_client.query(User, "status-201")
-    scim_client.query(User, "status-201", check_status_code=False)
+    scim_client.query(User, "status-201", expected_status_codes=None)
 
 
 def test_response_content_type_with_charset(client):

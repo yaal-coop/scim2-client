@@ -1,11 +1,18 @@
 Changelog
 =========
 
+[0.2.0] - Unreleased
+---------------------
+
+Added
+^^^^^
+- Replace :code:`check_status_code` parameter by :code:`expected_status_codes`.
+
 [0.1.11] - 2024-08-31
 ---------------------
 
 Fixed
-^^^^^^^
+^^^^^
 - Support for content-types with charset information. #18 #19
 
 [0.1.10] - 2024-08-18

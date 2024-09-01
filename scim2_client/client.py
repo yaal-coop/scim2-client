@@ -240,7 +240,7 @@ class SCIMClient:
         resource: Union[AnyResource, Dict],
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        check_status_code: bool = True,
+        expected_status_codes: Optional[List[int]] = CREATION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, Error, Dict]:
@@ -253,7 +253,8 @@ class SCIMClient:
             :code:`resource` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
-        :param check_status_code: Whether to validate that the response status code is valid.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
         :param raise_scim_errors: If :data:`True` and the server returned an
             :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
             exception will be raised. If :data:`False` the error object is returned.
@@ -318,9 +319,7 @@ class SCIMClient:
 
         return self.check_response(
             response=response,
-            expected_status_codes=(
-                self.CREATION_RESPONSE_STATUS_CODES if check_status_code else None
-            ),
+            expected_status_codes=expected_status_codes,
             expected_types=([resource.__class__] if check_request_payload else None),
             check_response_payload=check_response_payload,
             raise_scim_errors=raise_scim_errors,
@@ -334,7 +333,7 @@ class SCIMClient:
         search_request: Optional[Union[SearchRequest, Dict]] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        check_status_code: bool = True,
+        expected_status_codes: Optional[List[int]] = QUERY_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
@@ -351,7 +350,8 @@ class SCIMClient:
             :code:`search_request` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
-        :param check_status_code: Whether to validate that the response status code is valid.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
         :param raise_scim_errors: If :data:`True` and the server returned an
             :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
             exception will be raised. If :data:`False` the error object is returned.
@@ -447,9 +447,7 @@ class SCIMClient:
 
         return self.check_response(
             response=response,
-            expected_status_codes=(
-                self.QUERY_RESPONSE_STATUS_CODES if check_status_code else None
-            ),
+            expected_status_codes=expected_status_codes,
             expected_types=expected_types,
             check_response_payload=check_response_payload,
             raise_scim_errors=raise_scim_errors,
@@ -461,7 +459,7 @@ class SCIMClient:
         search_request: Optional[SearchRequest] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        check_status_code: bool = True,
+        expected_status_codes: Optional[List[int]] = SEARCH_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
@@ -475,7 +473,8 @@ class SCIMClient:
             :code:`search_request` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
-        :param check_status_code: Whether to validate that the response status code is valid.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
         :param raise_scim_errors: If :data:`True` and the server returned an
             :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
             exception will be raised. If :data:`False` the error object is returned.
@@ -528,9 +527,7 @@ class SCIMClient:
 
         return self.check_response(
             response=response,
-            expected_status_codes=(
-                self.SEARCH_RESPONSE_STATUS_CODES if check_status_code else None
-            ),
+            expected_status_codes=expected_status_codes,
             expected_types=[ListResponse[Union[self.resource_types]]],
             check_response_payload=check_response_payload,
             raise_scim_errors=raise_scim_errors,
@@ -542,7 +539,7 @@ class SCIMClient:
         resource_type: Type,
         id: str,
         check_response_payload: bool = True,
-        check_status_code: bool = True,
+        expected_status_codes: Optional[List[int]] = DELETION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = False,
         **kwargs,
     ) -> Optional[Union[Error, Dict]]:
@@ -553,7 +550,8 @@ class SCIMClient:
         :param id: The type id the resource to delete.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
-        :param check_status_code: Whether to validate that the response status code is valid.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
         :param raise_scim_errors: If :data:`True` and the server returned an
             :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
             exception will be raised. If :data:`False` the error object is returned.
@@ -588,9 +586,7 @@ class SCIMClient:
 
         return self.check_response(
             response=response,
-            expected_status_codes=(
-                self.DELETION_RESPONSE_STATUS_CODES if check_status_code else None
-            ),
+            expected_status_codes=expected_status_codes,
             check_response_payload=check_response_payload,
             raise_scim_errors=raise_scim_errors,
         )
@@ -600,7 +596,7 @@ class SCIMClient:
         resource: Union[AnyResource, Dict],
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        check_status_code: bool = True,
+        expected_status_codes: Optional[List[int]] = REPLACEMENT_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = False,
         **kwargs,
     ) -> Union[AnyResource, Error, Dict]:
@@ -613,7 +609,8 @@ class SCIMClient:
             :code:`resource` is expected to be a dict that will be passed as-is in the request.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
-        :param check_status_code: Whether to validate that the response status code is valid.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
         :param raise_scim_errors: If :data:`True` and the server returned an
             :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
             exception will be raised. If :data:`False` the error object is returned.
@@ -687,9 +684,7 @@ class SCIMClient:
 
         return self.check_response(
             response=response,
-            expected_status_codes=(
-                self.REPLACEMENT_RESPONSE_STATUS_CODES if check_status_code else None
-            ),
+            expected_status_codes=expected_status_codes,
             expected_types=([resource.__class__] if check_request_payload else None),
             check_response_payload=check_response_payload,
             raise_scim_errors=raise_scim_errors,

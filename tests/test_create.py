@@ -244,7 +244,8 @@ def test_no_200(httpserver):
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(UnexpectedStatusCode):
         scim_client.create(user_request)
-    scim_client.create(user_request, check_status_code=False)
+    scim_client.create(user_request, expected_status_codes=None)
+    scim_client.create(user_request, expected_status_codes=[200, 201])
 
 
 @pytest.mark.parametrize("code", [400, 401, 403, 404, 500])
