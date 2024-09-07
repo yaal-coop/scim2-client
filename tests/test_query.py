@@ -427,7 +427,7 @@ def test_no_result(client):
 
 
 def test_bad_request(client):
-    """Test querying a resource unkown from the server instantiate an Error
+    """Test querying a resource unknown from the server instantiate an Error
     object."""
     scim_client = SCIMClient(
         client,
@@ -441,7 +441,7 @@ def test_bad_request(client):
 
 
 def test_resource_unknown_by_server(client):
-    """Test querying a resource unkown from the server instantiate an Error
+    """Test querying a resource unknown from the server instantiate an Error
     object."""
 
     class Foobar(Resource):
@@ -453,12 +453,12 @@ def test_resource_unknown_by_server(client):
 
 
 def test_bad_resource_type(client):
-    """Test querying a resource unkown from the client raise a
+    """Test querying a resource unknown from the client raise a
     SCIMResponseError."""
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
         SCIMResponseError,
-        match="Expected type User but got unknow resource with schemas: urn:ietf:params:scim:schemas:core:2.0:Group",
+        match="Expected type User but got unknown resource with schemas: urn:ietf:params:scim:schemas:core:2.0:Group",
     ):
         scim_client.query(User, "its-a-group")
 
@@ -492,7 +492,7 @@ def test_all_unexpected_type(client):
 
 
 def test_response_is_not_json(client):
-    """Test sitations where servers return an invalid JSON object."""
+    """Test situations where servers return an invalid JSON object."""
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -524,7 +524,7 @@ def test_dont_check_response_payload(httpserver, client):
 
 
 def test_response_bad_status_code(client):
-    """Test sitations where servers return an invalid status code."""
+    """Test situations where servers return an invalid status code."""
     scim_client = SCIMClient(
         client,
         resource_types=(
@@ -538,7 +538,7 @@ def test_response_bad_status_code(client):
 
 
 def test_response_content_type_with_charset(client):
-    """Test sitations where servers return a valid content-type with a charset
+    """Test situations where servers return a valid content-type with a charset
     information."""
     scim_client = SCIMClient(client, resource_types=(User, Group))
     user = scim_client.query(User, "content-type-with-charset")
@@ -546,7 +546,8 @@ def test_response_content_type_with_charset(client):
 
 
 def test_response_bad_content_type(client):
-    """Test sitations where servers return an invalid content-type response."""
+    """Test situations where servers return an invalid content-type
+    response."""
     scim_client = SCIMClient(
         client,
         resource_types=(

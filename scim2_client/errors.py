@@ -25,7 +25,7 @@ class SCIMRequestError(SCIMClientError):
 class RequestNetworkError(SCIMRequestError):
     """Error raised when a network error happened during request.
 
-    This error is raised when a :class:`httpx.RequestError` has been catched while performing a request.
+    This error is raised when a :class:`httpx.RequestError` has been caught while performing a request.
     The original :class:`~httpx.RequestError` is available with :attr:`~BaseException.__cause__`.
     """
 
@@ -38,7 +38,7 @@ class RequestPayloadValidationError(SCIMRequestError):
     """Error raised when an invalid request payload has been passed to
     SCIMClient.
 
-    This error is raised when a :class:`pydantic.ValidationError` has been catched
+    This error is raised when a :class:`pydantic.ValidationError` has been caught
     while validating the client request payload.
     The original :class:`~pydantic.ValidationError` is available with :attr:`~BaseException.__cause__`.
 
@@ -108,7 +108,7 @@ class ResponsePayloadValidationError(SCIMResponseError):
     """Error raised when the server returned a payload that cannot be
     validated.
 
-    This error is raised when a :class:`pydantic.ValidationError` has been catched
+    This error is raised when a :class:`pydantic.ValidationError` has been caught
     while validating the server response payload.
     The original :class:`~pydantic.ValidationError` is available with :attr:`~BaseException.__cause__`.
 

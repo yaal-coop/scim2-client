@@ -85,7 +85,7 @@ Additional request parameters
 =============================
 
 Any additional parameter will be passed to the underlying httpx methods.
-This can be usefull if you need to explicitly pass a certain URL for example:
+This can be useful if you need to explicitly pass a certain URL for example:
 
 .. code-block:: python
 

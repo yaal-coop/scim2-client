@@ -19,3 +19,10 @@ repos:
     rev: v1.7.5
     hooks:
       - id: docformatter
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+    - id: codespell
+      additional_dependencies:
+        - tomli
+      args: [--write-changes]

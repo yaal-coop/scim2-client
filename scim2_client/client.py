@@ -219,7 +219,7 @@ class SCIMClient:
             expected = ", ".join([type.__name__ for type in expected_types])
             try:
                 schema = ", ".join(response_payload["schemas"])
-                message = f"Expected type {expected} but got unknow resource with schemas: {schema}"
+                message = f"Expected type {expected} but got unknown resource with schemas: {schema}"
             except KeyError:
                 message = (
                     f"Expected type {expected} but got undefined object with no schema"
