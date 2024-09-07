@@ -6,7 +6,7 @@ Initialization
 
 scim2-client depends on `httpx <https://github.com/encode/httpx>`_ to perform network requests.
 As a start you will need to instantiate a httpx :code:`Client` object that you can parameter as your will, and then pass it to a :class:`~scim2_client.SCIMClient` object.
-In addition to your SCIM server root endpoint, you will probably want to provide some authorization headers:
+In addition to your SCIM server root endpoint, you will probably want to provide some authorization headers through the httpx :code:`Client` :code:`headers` parameter:
 
 .. code-block:: python
 
