@@ -630,8 +630,7 @@ class SCIMClient:
 
             user = scim.query(User, "my-used-id")
             user.display_name = "Fancy New Name"
-            response = scim.update(user)
-            # 'response' may be a User or an Error object
+            updated_user = scim.replace(user)
 
         .. tip::
 
