@@ -287,7 +287,7 @@ def test_request_validation_error(httpserver):
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(
-        RequestPayloadValidationError, match="Server response payload validation error"
+        RequestPayloadValidationError, match="Server request payload validation error"
     ):
         scim_client.create(
             {
