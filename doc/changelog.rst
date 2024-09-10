@@ -1,6 +1,14 @@
 Changelog
 =========
 
+[0.2.1] - Unreleased
+---------------------
+
+Fixed
+^^^^^
+- :class:`~scim2_client.RequestPayloadValidationError` error message.
+
+
 [0.2.0] - 2024-09-01
 ---------------------
 

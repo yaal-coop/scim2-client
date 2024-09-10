@@ -51,7 +51,7 @@ class RequestPayloadValidationError(SCIMRequestError):
     """
 
     def __init__(self, *args, **kwargs):
-        message = kwargs.pop("message", "Server response payload validation error")
+        message = kwargs.pop("message", "Server request payload validation error")
         super().__init__(message, *args, **kwargs)
 
 
