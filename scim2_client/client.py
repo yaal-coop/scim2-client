@@ -161,7 +161,7 @@ class SCIMClient:
         self,
         response: Response,
         expected_status_codes: List[int],
-        expected_types: Optional[List[Type]] = None,
+        expected_types: Optional[Type] = None,
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
         scim_ctx: Optional[Context] = None,
@@ -320,7 +320,7 @@ class SCIMClient:
         return self.check_response(
             response=response,
             expected_status_codes=expected_status_codes,
-            expected_types=[[resource.__class__] if check_request_payload else None],
+            expected_types=([resource.__class__] if check_request_payload else None),
             check_response_payload=check_response_payload,
             raise_scim_errors=raise_scim_errors,
             scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
