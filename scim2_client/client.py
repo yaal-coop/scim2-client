@@ -169,19 +169,6 @@ class SCIMClient:
         if expected_status_codes and response.status_code not in expected_status_codes:
             raise UnexpectedStatusCode(source=response)
 
-        # Interoperability considerations:  The "application/scim+json" media
-        # type is intended to identify JSON structure data that conforms to
-        # the SCIM protocol and schema specifications.  Older versions of
-        # SCIM are known to informally use "application/json".
-        # https://datatracker.ietf.org/doc/html/rfc7644.html#section-8.1
-
-        expected_response_content_types = ("application/scim+json", "application/json")
-        if (
-            response.headers.get("content-type").split(";").pop(0)
-            not in expected_response_content_types
-        ):
-            raise UnexpectedContentType(source=response)
-
         # In addition to returning an HTTP response code, implementers MUST return
         # the errors in the body of the response in a JSON format
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
@@ -191,6 +178,19 @@ class SCIMClient:
             response_payload = None
 
         else:
+            # Interoperability considerations:  The "application/scim+json" media
+            # type is intended to identify JSON structure data that conforms to
+            # the SCIM protocol and schema specifications.  Older versions of
+            # SCIM are known to informally use "application/json".
+            # https://datatracker.ietf.org/doc/html/rfc7644.html#section-8.1
+
+            expected_response_content_types = ("application/scim+json", "application/json")
+            if (
+                response.headers.get("content-type").split(";").pop(0)
+                not in expected_response_content_types
+            ):
+                raise UnexpectedContentType(source=response)
+
             try:
                 response_payload = response.json()
             except json.decoder.JSONDecodeError as exc:
