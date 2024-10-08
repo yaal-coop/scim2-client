@@ -120,7 +120,6 @@ def test_search_request(httpserver):
     )
     req = SearchRequest(
         attributes=["userName", "displayName"],
-        excluded_attributes=["timezone", "phoneNumbers"],
         filter='userName Eq "john"',
         sort_by="userName",
         sort_order=SearchRequest.SortOrder.ascending,
@@ -150,7 +149,6 @@ def test_dont_check_response(httpserver):
 
     req = SearchRequest(
         attributes=["userName", "displayName"],
-        excluded_attributes=["timezone", "phoneNumbers"],
         filter='userName Eq "john"',
         sort_by="userName",
         sort_order=SearchRequest.SortOrder.ascending,
@@ -198,7 +196,6 @@ def test_dont_check_request_payload(httpserver):
     )
     req = {
         "attributes": ["userName", "displayName"],
-        "excluded_attributes": ["timezone", "phoneNumbers"],
         "filter": 'userName Eq "john"',
         "sort_by": "userName",
         "sort_order": SearchRequest.SortOrder.ascending.value,
