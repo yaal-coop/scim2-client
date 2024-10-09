@@ -581,7 +581,6 @@ def test_search_request(httpserver, client):
     )
     req = SearchRequest(
         attributes=["userName", "displayName"],
-        excluded_attributes=["timezone", "phoneNumbers"],
         filter='userName Eq "john"',
         sort_by="userName",
         sort_order=SearchRequest.SortOrder.ascending,
