@@ -560,7 +560,7 @@ def test_response_bad_content_type(client):
 
 
 def test_search_request(httpserver, client):
-    query_string = "attributes=userName&attributes=displayName&excludedAttributes=timezone&excludedAttributes=phoneNumbers&filter=userName%20Eq%20%22john%22&sortBy=userName&sortOrder=ascending&startIndex=1&count=10"
+    query_string = "attributes=userName&attributes=displayName&filter=userName%20Eq%20%22john%22&sortBy=userName&sortOrder=ascending&startIndex=1&count=10"
 
     httpserver.expect_request(
         "/Users/with-qs", query_string=query_string
