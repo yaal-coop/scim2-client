@@ -45,7 +45,12 @@ class RequestPayloadValidationError(SCIMRequestError):
     .. code-block:: python
 
         try:
-            scim.create({"schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"], "active": "not-a-bool"})
+            scim.create(
+                {
+                    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+                    "active": "not-a-bool",
+                }
+            )
         except RequestPayloadValidationError as exc:
             print("Original validation error cause", exc.__cause__)
     """
