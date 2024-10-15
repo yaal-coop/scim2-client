@@ -103,19 +103,19 @@ commands = [
     ["pytest", "--showlocals", "--full-trace", "{posargs}"],
 ]
 
-[too.tox.env.style]
+[tool.tox.env.style]
 deps = "pre-commit-uv"
 commands = [
     ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
 ]
 
-[too.tox.env.doc]
+[tool.tox.env.doc]
 commands = [
     ["sphinx-build", "--builder", "html", "doc", "build/sphinx/html"],
     ["sphinx-build", "--builder", "man", "doc", "build/sphinx/html"],
 ]
 
-[too.tox.env.coverage]
+[tool.tox.env.coverage]
 commands = [
     ["pytest", "--cov", "--cov-fail-under=100", "--cov-report", "term:skip-covered", "{posargs}"],
     ["coverage", "html"],
