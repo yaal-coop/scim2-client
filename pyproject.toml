@@ -86,35 +86,37 @@ force-single-line = true
 docstring-code-format = true
 
 [tool.tox]
-legacy_tox_ini = """
-[tox]
-isolated_build = true
-skipsdist = true
-envlist =
-    style
-    py39
-    py310
-    py311
-    py312
-    py313
-    doc
-    coverage
+requires = ["tox>=4.19"]
+env_list = [
+    "style",
+    "py39",
+    "py310",
+    "py311",
+    "py312",
+    "py313",
+    "doc",
+    "coverage",
+]
 
-[testenv]
-commands = pytest --showlocals --full-trace {posargs}
+[tool.tox.env_run_base]
+commands = [
+    ["pytest", "--showlocals", "--full-trace", "{posargs}"],
+]
 
-[testenv:style]
-deps = pre-commit-uv
-commands =
-    pre-commit run --all-files --show-diff-on-failure
+[too.tox.env.style]
+deps = "pre-commit-uv"
+commands = [
+    ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
+]
 
-[testenv:doc]
-commands =
-    sphinx-build --builder html doc build/sphinx/html
-    sphinx-build --builder man doc build/sphinx/html
+[too.tox.env.doc]
+commands = [
+    ["sphinx-build", "--builder", "html", "doc", "build/sphinx/html"],
+    ["sphinx-build", "--builder", "man", "doc", "build/sphinx/html"],
+]
 
-[testenv:coverage]
-commands =
-    pytest --cov --cov-fail-under=100 --cov-report term:skip-covered {posargs}
-    coverage html
-"""
+[too.tox.env.coverage]
+commands = [
+    ["pytest", "--cov", "--cov-fail-under=100", "--cov-report", "term:skip-covered", "{posargs}"],
+    ["coverage", "html"],
+]
