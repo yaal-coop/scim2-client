@@ -1,11 +1,7 @@
 import json
 import json.decoder
 import sys
-from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Tuple
-from typing import Type
 from typing import Union
 
 from httpx import Client
@@ -52,7 +48,7 @@ class SCIMClient:
         :class:`~scim2_models.ResourceType`, :class:`~scim2_models.Schema` and :class:`scim2_models.ServiceProviderConfig` are pre-loaded by default.
     """
 
-    CREATION_RESPONSE_STATUS_CODES: List[int] = [
+    CREATION_RESPONSE_STATUS_CODES: list[int] = [
         201,
         409,
         307,
@@ -69,14 +65,14 @@ class SCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    QUERY_RESPONSE_STATUS_CODES: List[int] = [200, 400, 307, 308, 401, 403, 404, 500]
+    QUERY_RESPONSE_STATUS_CODES: list[int] = [200, 400, 307, 308, 401, 403, 404, 500]
     """Resource querying HTTP codes.
 
     As defined at :rfc:`RFC7644 §3.4.2 <7644#section-3.4.2>` and
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    SEARCH_RESPONSE_STATUS_CODES: List[int] = [
+    SEARCH_RESPONSE_STATUS_CODES: list[int] = [
         200,
         307,
         308,
@@ -95,7 +91,7 @@ class SCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    DELETION_RESPONSE_STATUS_CODES: List[int] = [
+    DELETION_RESPONSE_STATUS_CODES: list[int] = [
         204,
         307,
         308,
@@ -113,7 +109,7 @@ class SCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    REPLACEMENT_RESPONSE_STATUS_CODES: List[int] = [
+    REPLACEMENT_RESPONSE_STATUS_CODES: list[int] = [
         200,
         307,
         308,
@@ -132,7 +128,7 @@ class SCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    def __init__(self, client: Client, resource_types: Optional[Tuple[Type]] = None):
+    def __init__(self, client: Client, resource_types: Optional[tuple[type]] = None):
         self.client = client
         self.resource_types = tuple(
             set(resource_types or []) | {ResourceType, Schema, ServiceProviderConfig}
@@ -142,7 +138,7 @@ class SCIMClient:
         if resource_type not in self.resource_types:
             raise SCIMRequestError(f"Unknown resource type: '{resource_type}'")
 
-    def resource_endpoint(self, resource_type: Type):
+    def resource_endpoint(self, resource_type: type):
         if resource_type is None:
             return "/"
 
@@ -160,8 +156,8 @@ class SCIMClient:
     def check_response(
         self,
         response: Response,
-        expected_status_codes: List[int],
-        expected_types: Optional[Type] = None,
+        expected_status_codes: list[int],
+        expected_types: Optional[type] = None,
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
         scim_ctx: Optional[Context] = None,
@@ -237,13 +233,13 @@ class SCIMClient:
 
     def create(
         self,
-        resource: Union[AnyResource, Dict],
+        resource: Union[AnyResource, dict],
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[List[int]] = CREATION_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[list[int]] = CREATION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
-    ) -> Union[AnyResource, Error, Dict]:
+    ) -> Union[AnyResource, Error, dict]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
         <7644#section-3.3>`.
 
@@ -328,15 +324,15 @@ class SCIMClient:
 
     def query(
         self,
-        resource_type: Optional[Type] = None,
+        resource_type: Optional[type] = None,
         id: Optional[str] = None,
-        search_request: Optional[Union[SearchRequest, Dict]] = None,
+        search_request: Optional[Union[SearchRequest, dict]] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[List[int]] = QUERY_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[list[int]] = QUERY_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
-    ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644
         §3.4.2 <7644#section-3.4.2>`.
 
@@ -459,10 +455,10 @@ class SCIMClient:
         search_request: Optional[SearchRequest] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[List[int]] = SEARCH_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[list[int]] = SEARCH_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
-    ) -> Union[AnyResource, ListResponse[AnyResource], Error, Dict]:
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
         """Perform a POST search request to read all available resources, as
         defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
 
@@ -536,13 +532,13 @@ class SCIMClient:
 
     def delete(
         self,
-        resource_type: Type,
+        resource_type: type,
         id: str,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[List[int]] = DELETION_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[list[int]] = DELETION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
-    ) -> Optional[Union[Error, Dict]]:
+    ) -> Optional[Union[Error, dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
         <7644#section-3.6>`.
 
@@ -593,13 +589,13 @@ class SCIMClient:
 
     def replace(
         self,
-        resource: Union[AnyResource, Dict],
+        resource: Union[AnyResource, dict],
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[List[int]] = REPLACEMENT_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[list[int]] = REPLACEMENT_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
-    ) -> Union[AnyResource, Error, Dict]:
+    ) -> Union[AnyResource, Error, dict]:
         """Perform a PUT request to replace a resource, as defined in
         :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
@@ -691,6 +687,6 @@ class SCIMClient:
         )
 
     def modify(
-        self, resource: Union[AnyResource, Dict], op: PatchOp, **kwargs
-    ) -> Optional[Union[AnyResource, Dict]]:
+        self, resource: Union[AnyResource, dict], op: PatchOp, **kwargs
+    ) -> Optional[Union[AnyResource, dict]]:
         raise NotImplementedError()
