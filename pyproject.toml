@@ -94,6 +94,7 @@ env_list = [
     "py311",
     "py312",
     "py313",
+    "minversions",
     "doc",
     "coverage",
 ]
@@ -107,6 +108,12 @@ commands = [
 deps = "pre-commit-uv"
 commands = [
     ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
+]
+
+[tool.tox.env.minversions]
+uv_resolution = "lowest-direct"
+commands = [
+    ["pytest", "--showlocals", "--full-trace", "{posargs}"],
 ]
 
 [tool.tox.env.doc]
