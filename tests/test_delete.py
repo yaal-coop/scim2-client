@@ -49,8 +49,7 @@ def test_errors(httpserver, code):
 
 
 def test_invalid_resource_type(httpserver):
-    """Test that resource_types passed to the method must be part of
-    SCIMClient.resource_types."""
+    """Test that resource_types passed to the method must be part of SCIMClient.resource_types."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):

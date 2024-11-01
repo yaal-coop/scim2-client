@@ -58,8 +58,7 @@ def test_create_user(httpserver):
 
 
 def test_create_dict_user(httpserver):
-    """Nominal case for a User creation object, when passing a dict instead of
-    a resource."""
+    """Nominal case for a User creation object, when passing a dict instead of a resource."""
     httpserver.expect_request("/Users", method="POST").respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -274,8 +273,7 @@ def test_errors(httpserver, code):
 
 
 def test_invalid_resource_type(httpserver):
-    """Test that resource_types passed to the method must be part of
-    SCIMClient.resource_types."""
+    """Test that resource_types passed to the method must be part of SCIMClient.resource_types."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):

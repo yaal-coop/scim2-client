@@ -240,8 +240,7 @@ class SCIMClient:
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
-        """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3
-        <7644#section-3.3>`.
+        """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3 <7644#section-3.3>`.
 
         :param resource: The resource to create
             If is a :data:`dict`, the resource type will be guessed from the schema.
@@ -333,8 +332,7 @@ class SCIMClient:
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
-        """Perform a GET request to read resources, as defined in :rfc:`RFC7644
-        §3.4.2 <7644#section-3.4.2>`.
+        """Perform a GET request to read resources, as defined in :rfc:`RFC7644 §3.4.2 <7644#section-3.4.2>`.
 
         - If `id` is not :data:`None`, the resource with the exact id will be reached.
         - If `id` is :data:`None`, all the resources with the given type will be reached.
@@ -459,8 +457,7 @@ class SCIMClient:
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
-        """Perform a POST search request to read all available resources, as
-        defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
+        """Perform a POST search request to read all available resources, as defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
 
         :param resource_types: Resource type or union of types expected
             to be read from the response.
@@ -539,8 +536,7 @@ class SCIMClient:
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
-        """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6
-        <7644#section-3.6>`.
+        """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6 <7644#section-3.6>`.
 
         :param resource_type: The type of the resource to delete.
         :param id: The type id the resource to delete.
@@ -596,8 +592,7 @@ class SCIMClient:
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
-        """Perform a PUT request to replace a resource, as defined in
-        :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
+        """Perform a PUT request to replace a resource, as defined in :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
         :param resource: The new resource to replace.
             If is a :data:`dict`, the resource type will be guessed from the schema.

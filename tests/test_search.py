@@ -14,8 +14,7 @@ from scim2_client import SCIMClient
 
 
 def test_all_objects(httpserver):
-    """Test that a search request can be posted without SearchRequest
-    arguments, and instantiate a ListResponse object."""
+    """Test that a search request can be posted without SearchRequest arguments, and instantiate a ListResponse object."""
     httpserver.expect_request("/.search", method="POST").respond_with_json(
         {
             "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],

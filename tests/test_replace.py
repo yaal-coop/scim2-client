@@ -101,8 +101,7 @@ def test_replace_user_dict(httpserver):
 
 
 def test_replace_user_dict_bad_schema(httpserver):
-    """Test case for a User creation object by passing a dict with an invalid
-    or missing schema."""
+    """Test case for a User creation object by passing a dict with an invalid or missing schema."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
     ).respond_with_json(
@@ -298,8 +297,7 @@ def test_user_with_no_id(httpserver):
 
 
 def test_invalid_resource_type(httpserver):
-    """Test that resource_types passed to the method must be part of
-    SCIMClient.resource_types."""
+    """Test that resource_types passed to the method must be part of SCIMClient.resource_types."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
     scim_client = SCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):

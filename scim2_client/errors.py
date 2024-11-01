@@ -35,8 +35,7 @@ class RequestNetworkError(SCIMRequestError):
 
 
 class RequestPayloadValidationError(SCIMRequestError):
-    """Error raised when an invalid request payload has been passed to
-    SCIMClient.
+    """Error raised when an invalid request payload has been passed to SCIMClient.
 
     This error is raised when a :class:`pydantic.ValidationError` has been caught
     while validating the client request payload.
@@ -61,8 +60,7 @@ class RequestPayloadValidationError(SCIMRequestError):
 
 
 class SCIMResponseError(SCIMClientError):
-    """Base exception for errors happening during response payload
-    validation."""
+    """Base exception for errors happening during response payload validation."""
 
 
 class SCIMResponseErrorObject(SCIMResponseError):
@@ -80,8 +78,7 @@ class SCIMResponseErrorObject(SCIMResponseError):
 
 
 class UnexpectedStatusCode(SCIMResponseError):
-    """Error raised when a server returned an unexpected status code for a
-    given :class:`~scim2_models.Context`."""
+    """Error raised when a server returned an unexpected status code for a given :class:`~scim2_models.Context`."""
 
     def __init__(self, *args, **kwargs):
         message = kwargs.pop(
@@ -92,8 +89,7 @@ class UnexpectedStatusCode(SCIMResponseError):
 
 
 class UnexpectedContentType(SCIMResponseError):
-    """Error raised when a server returned an unexpected `Content-Type` header
-    in a response."""
+    """Error raised when a server returned an unexpected `Content-Type` header in a response."""
 
     def __init__(self, *args, **kwargs):
         content_type = kwargs["source"].headers.get("content-type", "")
@@ -110,8 +106,7 @@ class UnexpectedContentFormat(SCIMResponseError):
 
 
 class ResponsePayloadValidationError(SCIMResponseError):
-    """Error raised when the server returned a payload that cannot be
-    validated.
+    """Error raised when the server returned a payload that cannot be validated.
 
     This error is raised when a :class:`pydantic.ValidationError` has been caught
     while validating the server response payload.
