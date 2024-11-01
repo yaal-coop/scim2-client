@@ -16,6 +16,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx_issues",
     "sphinxcontrib.autodoc_pydantic",
     "myst_parser",
 ]
@@ -70,3 +71,7 @@ html_context = {
     "source_version": "main",
     "source_docs_path": "/doc/",
 }
+
+# -- Options for sphinx-issues -------------------------------------
+
+issues_github_path = "python-scim/scim2-client"

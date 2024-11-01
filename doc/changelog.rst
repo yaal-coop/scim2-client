@@ -28,7 +28,7 @@ Changed
 
 Fixed
 ^^^^^
-- Support for content-types with charset information. #18 #19
+- Support for content-types with charset information. :issue:`18,19`
 
 [0.1.10] - 2024-08-18
 ---------------------

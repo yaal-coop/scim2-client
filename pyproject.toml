@@ -49,6 +49,7 @@ doc = [
     "autodoc-pydantic>=2.2.0",
     "myst-parser>=3.0.1",
     "shibuya>=2024.5.15",
+    "sphinx-issues >= 5.0.0",
     "sphinx>=7.3.7",
 ]
 
