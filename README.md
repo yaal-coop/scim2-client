@@ -57,6 +57,6 @@ assert response.detail == "One or more of the attribute values are already in us
 ```
 
 scim2-client belongs in a collection of SCIM tools developed by [Yaal Coop](https://yaal.coop),
-with [scim2-models](https://github.com/yaal-coop/scim2-models),
-[scim2-tester](https://github.com/yaal-coop/scim2-tester) and
-[scim2-cli](https://github.com/yaal-coop/scim2-cli)
+with [scim2-models](https://github.com/python-scim/scim2-models),
+[scim2-tester](https://github.com/python-scim/scim2-tester) and
+[scim2-cli](https://github.com/python-scim/scim2-cli)

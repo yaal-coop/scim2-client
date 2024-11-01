@@ -52,7 +52,7 @@ html_baseurl = "https://scim2-client.readthedocs.io"
 html_theme_options = {
     "globaltoc_expand_depth": 2,
     "accent_color": "lime",
-    "github_url": "https://github.com/yaal-coop/scim2-client",
+    "github_url": "https://github.com/python-scim/scim2-client",
     "mastodon_url": "https://toot.aquilenet.fr/@yaal",
     "nav_links": [
         {"title": "scim2-models", "url": "https://scim2-models.readthedocs.io"},
@@ -65,7 +65,7 @@ html_theme_options = {
 }
 html_context = {
     "source_type": "github",
-    "source_user": "yaal-coop",
+    "source_user": "python-scim",
     "source_repo": "scim2-client",
     "source_version": "main",
     "source_docs_path": "/doc/",
