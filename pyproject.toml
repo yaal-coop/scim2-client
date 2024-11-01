@@ -107,7 +107,8 @@ commands = [
 ]
 
 [tool.tox.env.style]
-deps = "pre-commit-uv"
+deps = ["pre-commit-uv"]
+runner = "uv-venv-runner"
 commands = [
     ["pre-commit", "run", "--all-files", "--show-diff-on-failure"],
 ]
