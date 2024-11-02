@@ -39,6 +39,7 @@ funding = "https://github.com/sponsors/python-scim"
 
 [dependency-groups]
 dev = [
+    "pre-commit-uv>=4.1.4",
     "pytest>=8.2.1",
     "pytest-coverage>=0.0",
     "pytest-httpserver>=1.0.10",
@@ -114,6 +115,7 @@ env_list = [
 
 [tool.tox.env_run_base]
 runner = "uv-venv-lock-runner"
+dependency_groups = ["dev"]
 commands = [
     ["pytest", "--showlocals", "--full-trace", "{posargs}"],
 ]
@@ -127,9 +129,6 @@ commands = [
 
 [tool.tox.env.minversions]
 uv_resolution = "lowest-direct"
-commands = [
-    ["pytest", "--showlocals", "--full-trace", "{posargs}"],
-]
 
 [tool.tox.env.doc]
 dependency_groups = ["doc"]
