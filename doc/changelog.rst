@@ -1,8 +1,16 @@
 Changelog
 =========
 
+[0.3.0] - Unreleased
+--------------------
+
+Changed
+^^^^^^^
+
+- Renamed ``resource_type`` attributes in ``resource_model`` :issue:`4`
+
 [0.2.1] - 2024-11-07
----------------------
+--------------------
 
 Added
 ^^^^^
@@ -14,7 +22,7 @@ Fixed
 - Don't crash when servers don't return content type headers. :pr:`22,24`
 
 [0.2.0] - 2024-09-01
----------------------
+--------------------
 
 Added
 ^^^^^
