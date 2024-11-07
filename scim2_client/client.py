@@ -171,11 +171,9 @@ class SCIMClient:
         # SCIM are known to informally use "application/json".
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-8.1
 
+        actual_content_type = response.headers.get("content-type", "").split(";").pop(0)
         expected_response_content_types = ("application/scim+json", "application/json")
-        if (
-            response.headers.get("content-type").split(";").pop(0)
-            not in expected_response_content_types
-        ):
+        if actual_content_type not in expected_response_content_types:
             raise UnexpectedContentType(source=response)
 
         # In addition to returning an HTTP response code, implementers MUST return
