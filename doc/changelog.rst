@@ -11,6 +11,7 @@ Added
 Fixed
 ^^^^^
 - :class:`~scim2_client.RequestPayloadValidationError` error message.
+- Don't crash when servers don't return content type headers. :pr:`22,24`
 
 [0.2.0] - 2024-09-01
 ---------------------
