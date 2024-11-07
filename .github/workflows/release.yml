@@ -37,7 +37,7 @@ jobs:
 
     environment:
       name: pypi-release
-      url: https://pypi.org/project/scim2-models/
+      url: https://pypi.org/project/scim2-client/
     permissions:
       id-token: write
 
