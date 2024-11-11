@@ -128,7 +128,9 @@ class SCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    def __init__(self, client: Client, resource_types: Optional[tuple[type]] = None):
+    def __init__(
+        self, client: Client, resource_types: Optional[tuple[type[Resource]]] = None
+    ):
         self.client = client
         self.resource_types = tuple(
             set(resource_types or []) | {ResourceType, Schema, ServiceProviderConfig}
@@ -138,7 +140,7 @@ class SCIMClient:
         if resource_type not in self.resource_types:
             raise SCIMRequestError(f"Unknown resource type: '{resource_type}'")
 
-    def resource_endpoint(self, resource_type: type):
+    def resource_endpoint(self, resource_type: Optional[type[Resource]]):
         if resource_type is None:
             return "/"
 
@@ -156,8 +158,8 @@ class SCIMClient:
     def check_response(
         self,
         response: Response,
-        expected_status_codes: list[int],
-        expected_types: Optional[type] = None,
+        expected_status_codes: Optional[list[int]] = None,
+        expected_types: Optional[list[type[Resource]]] = None,
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
         scim_ctx: Optional[Context] = None,
@@ -209,8 +211,8 @@ class SCIMClient:
             expected_types, response_payload, with_extensions=False
         )
 
-        if not actual_type:
-            expected = ", ".join([type.__name__ for type in expected_types])
+        if response_payload and not actual_type:
+            expected = ", ".join([type_.__name__ for type_ in expected_types])
             try:
                 schema = ", ".join(response_payload["schemas"])
                 message = f"Expected type {expected} but got unknown resource with schemas: {schema}"
@@ -293,10 +295,10 @@ class SCIMClient:
                 try:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
-                    scim_exc = RequestPayloadValidationError(source=resource)
+                    scim_validation_exc = RequestPayloadValidationError(source=resource)
                     if sys.version_info >= (3, 11):  # pragma: no cover
-                        scim_exc.add_note(str(exc))
-                    raise scim_exc from exc
+                        scim_validation_exc.add_note(str(exc))
+                    raise scim_validation_exc from exc
 
             self.check_resource_type(resource_type)
             url = kwargs.pop("url", self.resource_endpoint(resource_type))
@@ -305,10 +307,10 @@ class SCIMClient:
         try:
             response = self.client.post(url, json=payload, **kwargs)
         except RequestError as exc:
-            scim_exc = RequestNetworkError(source=payload)
+            scim_network_exc = RequestNetworkError(source=payload)
             if sys.version_info >= (3, 11):  # pragma: no cover
-                scim_exc.add_note(str(exc))
-            raise scim_exc from exc
+                scim_network_exc.add_note(str(exc))
+            raise scim_network_exc from exc
 
         return self.check_response(
             response=response,
@@ -321,7 +323,7 @@ class SCIMClient:
 
     def query(
         self,
-        resource_type: Optional[type] = None,
+        resource_type: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
         check_request_payload: bool = True,
@@ -396,18 +398,18 @@ class SCIMClient:
         if resource_type and check_request_payload:
             self.check_resource_type(resource_type)
 
+        payload: SearchRequest | None
         if not check_request_payload:
             payload = search_request
 
-        else:
-            payload = (
-                search_request.model_dump(
-                    exclude_unset=True,
-                    scim_ctx=Context.RESOURCE_QUERY_REQUEST,
-                )
-                if search_request
-                else None
+        elif isinstance(search_request, SearchRequest):
+            payload = search_request.model_dump(
+                exclude_unset=True,
+                scim_ctx=Context.RESOURCE_QUERY_REQUEST,
             )
+
+        else:
+            payload = None
 
         url = kwargs.pop("url", self.resource_endpoint(resource_type))
 
@@ -647,10 +649,10 @@ class SCIMClient:
                 try:
                     resource = resource_type.model_validate(resource)
                 except ValidationError as exc:
-                    scim_exc = RequestPayloadValidationError(source=resource)
+                    scim_validation_exc = RequestPayloadValidationError(source=resource)
                     if sys.version_info >= (3, 11):  # pragma: no cover
-                        scim_exc.add_note(str(exc))
-                    raise scim_exc from exc
+                        scim_validation_exc.add_note(str(exc))
+                    raise scim_validation_exc from exc
 
             self.check_resource_type(resource_type)
 
@@ -665,10 +667,10 @@ class SCIMClient:
         try:
             response = self.client.put(url, json=payload, **kwargs)
         except RequestError as exc:
-            scim_exc = RequestNetworkError(source=payload)
+            scim_network_exc = RequestNetworkError(source=payload)
             if sys.version_info >= (3, 11):  # pragma: no cover
-                scim_exc.add_note(str(exc))
-            raise scim_exc from exc
+                scim_network_exc.add_note(str(exc))
+            raise scim_network_exc from exc
 
         return self.check_response(
             response=response,
