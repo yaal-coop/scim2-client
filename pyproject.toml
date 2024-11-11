@@ -44,8 +44,8 @@ dev = [
     "pytest-coverage>=0.0",
     "pytest-httpserver>=1.0.10",
     "tox-uv>=1.16.0",
+    "mypy>=1.13.0",
 ]
-
 doc = [
     "autodoc-pydantic>=2.2.0",
     "myst-parser>=3.0.1",
@@ -99,6 +99,11 @@ force-single-line = true
 
 [tool.ruff.format]
 docstring-code-format = true
+
+[tool.mypy]
+plugins = [
+  "pydantic.mypy"
+]
 
 [tool.tox]
 requires = ["tox>=4.19"]

@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[0.2.2] - Unreleased
+---------------------
+
+Added
+^^^^^
+- Mypy type checking and py.typed file :pr:`25`
+
 [0.2.1] - 2024-11-07
 ---------------------
 
