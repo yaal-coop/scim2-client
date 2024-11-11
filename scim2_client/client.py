@@ -140,7 +140,7 @@ class SCIMClient:
         if resource_type not in self.resource_types:
             raise SCIMRequestError(f"Unknown resource type: '{resource_type}'")
 
-    def resource_endpoint(self, resource_type: Optional[type[Resource]]):
+    def resource_endpoint(self, resource_type: Optional[type[Resource]]) -> str:
         if resource_type is None:
             return "/"
 
@@ -163,7 +163,7 @@ class SCIMClient:
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
         scim_ctx: Optional[Context] = None,
-    ):
+    ) -> Error | None | dict | type[Resource]:
         if expected_status_codes and response.status_code not in expected_status_codes:
             raise UnexpectedStatusCode(source=response)
 
