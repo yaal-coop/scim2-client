@@ -136,7 +136,7 @@ class SCIMClient:
             set(resource_types or []) | {ResourceType, Schema, ServiceProviderConfig}
         )
 
-    def check_resource_type(self, resource_type):
+    def check_resource_type(self, resource_type: type[Resource]) -> None:
         if resource_type not in self.resource_types:
             raise SCIMRequestError(f"Unknown resource type: '{resource_type}'")
 
