@@ -163,7 +163,7 @@ class SCIMClient:
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
         scim_ctx: Optional[Context] = None,
-    ) -> Error | None | dict | type[Resource]:
+    ) -> Union[Error, None, dict, type[Resource]]:
         if expected_status_codes and response.status_code not in expected_status_codes:
             raise UnexpectedStatusCode(source=response)
 
@@ -398,7 +398,7 @@ class SCIMClient:
         if resource_type and check_request_payload:
             self.check_resource_type(resource_type)
 
-        payload: SearchRequest | None
+        payload: Optional[SearchRequest]
         if not check_request_payload:
             payload = search_request
 
