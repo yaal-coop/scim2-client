@@ -1,15 +1,15 @@
 Changelog
 =========
 
-[0.2.2] - Unreleased
----------------------
+[0.2.2] - 2024-11-12
+--------------------
 
 Added
 ^^^^^
 - Mypy type checking and py.typed file :pr:`25`
 
 [0.2.1] - 2024-11-07
----------------------
+--------------------
 
 Added
 ^^^^^
@@ -21,7 +21,7 @@ Fixed
 - Don't crash when servers don't return content type headers. :pr:`22,24`
 
 [0.2.0] - 2024-09-01
----------------------
+--------------------
 
 Added
 ^^^^^
