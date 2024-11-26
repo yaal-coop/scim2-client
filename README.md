@@ -31,7 +31,7 @@ from httpx import Client
 from scim2_models import User, EnterpriseUser, Group, Error
 from scim2_client import SCIMClient
 
-client = Client(base_url=f"https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
+client = Client(base_url="https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
 scim = SCIMClient(client, resource_types=(User[EnterpriseUser], Group))
 
 # Query resources
