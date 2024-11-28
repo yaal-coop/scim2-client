@@ -16,7 +16,7 @@ def test_delete_user(httpserver):
     ).respond_with_data(status=204, content_type="application/scim+json")
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.delete(User, "2819c223-7f76-453a-919d-413861904646")
     assert response is None
 
@@ -36,7 +36,7 @@ def test_errors(httpserver, code):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.delete(
         User, "2819c223-7f76-453a-919d-413861904646", raise_scim_errors=False
     )
@@ -48,10 +48,10 @@ def test_errors(httpserver, code):
     )
 
 
-def test_invalid_resource_type(httpserver):
-    """Test that resource_types passed to the method must be part of BaseSCIMClient.resource_types."""
+def test_invalid_resource_model(httpserver):
+    """Test that resource_models passed to the method must be part of BaseSCIMClient.resource_models."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
         scim_client.delete(Group(display_name="foobar"), id="foobar")
 
@@ -70,7 +70,7 @@ def test_dont_check_response_payload(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.delete(
         User, "2819c223-7f76-453a-919d-413861904646", check_response_payload=False
     )
@@ -84,7 +84,7 @@ def test_dont_check_response_payload(httpserver):
 def test_request_network_error(httpserver):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(
         RequestNetworkError, match="Network error happened during request"
     ):

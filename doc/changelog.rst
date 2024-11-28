@@ -9,7 +9,8 @@ Changelog
     This version comes with breaking changes:
 
     - `httpx` is no longer a direct dependency, it is shipped in the `httpx` packaging extra.
-    - Use ``scim2_client.engines.httpx.SyncSCIMClient`` instead of ``scim2_client.SCIMClient``.
+    - ``scim2_client.SCIMClient`` has moved to ``scim2_client.engines.httpx.SyncSCIMClient``.
+    - The ``resource_types`` parameters has been renamed ``resource_models``.
 
 Added
 ^^^^^

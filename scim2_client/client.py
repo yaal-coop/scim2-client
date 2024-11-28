@@ -36,7 +36,7 @@ class BaseSCIMClient:
 
     This class can be inherited and used as a basis for request engine integration.
 
-    :param resource_types: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
+    :param resource_models: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
         If a request payload describe a resource that is not in this list, an exception will be raised.
 
     .. note::
@@ -124,30 +124,32 @@ class BaseSCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    def __init__(self, resource_types: Optional[tuple[type[Resource]]] = None):
-        self.resource_types = tuple(
-            set(resource_types or []) | {ResourceType, Schema, ServiceProviderConfig}
+    def __init__(self, resource_models: Optional[tuple[type[Resource]]] = None):
+        self.resource_models = tuple(
+            set(resource_models or []) | {ResourceType, Schema, ServiceProviderConfig}
         )
 
-    def check_resource_type(self, resource_type: type[Resource], payload=None) -> None:
-        if resource_type not in self.resource_types:
+    def check_resource_model(
+        self, resource_model: type[Resource], payload=None
+    ) -> None:
+        if resource_model not in self.resource_models:
             raise SCIMRequestError(
-                f"Unknown resource type: '{resource_type}'", source=payload
+                f"Unknown resource type: '{resource_model}'", source=payload
             )
 
-    def resource_endpoint(self, resource_type: Optional[type[Resource]]) -> str:
-        if resource_type is None:
+    def resource_endpoint(self, resource_model: Optional[type[Resource]]) -> str:
+        if resource_model is None:
             return "/"
 
         # This one takes no final 's'
-        if resource_type is ServiceProviderConfig:
+        if resource_model is ServiceProviderConfig:
             return "/ServiceProviderConfig"
 
         try:
-            first_bracket_index = resource_type.__name__.index("[")
-            root_name = resource_type.__name__[:first_bracket_index]
+            first_bracket_index = resource_model.__name__.index("[")
+            root_name = resource_model.__name__[:first_bracket_index]
         except ValueError:
-            root_name = resource_type.__name__
+            root_name = resource_model.__name__
         return f"/{root_name}s"
 
     def check_response(
@@ -288,25 +290,25 @@ class BaseSCIMClient:
 
         else:
             if isinstance(resource, Resource):
-                resource_type = resource.__class__
+                resource_model = resource.__class__
 
             else:
-                resource_type = Resource.get_by_payload(self.resource_types, resource)
-                if not resource_type:
+                resource_model = Resource.get_by_payload(self.resource_models, resource)
+                if not resource_model:
                     raise SCIMRequestError(
                         "Cannot guess resource type from the payload"
                     )
 
                 try:
-                    resource = resource_type.model_validate(resource)
+                    resource = resource_model.model_validate(resource)
                 except ValidationError as exc:
                     scim_validation_exc = RequestPayloadValidationError(source=resource)
                     if sys.version_info >= (3, 11):  # pragma: no cover
                         scim_validation_exc.add_note(str(exc))
                     raise scim_validation_exc from exc
 
-            self.check_resource_type(resource_type, resource)
-            url = kwargs.pop("url", self.resource_endpoint(resource_type))
+            self.check_resource_model(resource_model, resource)
+            url = kwargs.pop("url", self.resource_endpoint(resource_model))
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
 
         expected_types = [resource.__class__] if check_request_payload else None
@@ -315,7 +317,7 @@ class BaseSCIMClient:
 
     def query(
         self,
-        resource_type: Optional[type[Resource]] = None,
+        resource_model: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
         check_request_payload: bool = True,
@@ -329,7 +331,7 @@ class BaseSCIMClient:
         - If `id` is not :data:`None`, the resource with the exact id will be reached.
         - If `id` is :data:`None`, all the resources with the given type will be reached.
 
-        :param resource_type: A :class:`~scim2_models.Resource` subtype or :data:`None`
+        :param resource_model: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
         :param check_request_payload: If :data:`False`,
@@ -345,8 +347,8 @@ class BaseSCIMClient:
 
         :return:
             - A :class:`~scim2_models.Error` object in case of error.
-            - A `resource_type` object in case of success if `id` is not :data:`None`
-            - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success if `id` is :data:`None`
+            - A `resource_model` object in case of success if `id` is not :data:`None`
+            - A :class:`~scim2_models.ListResponse[resource_model]` object in case of success if `id` is :data:`None`
 
         .. note::
 
@@ -391,7 +393,7 @@ class BaseSCIMClient:
 
     def prepare_query_request(
         self,
-        resource_type: Optional[type[Resource]] = None,
+        resource_model: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
         check_request_payload: bool = True,
@@ -400,8 +402,8 @@ class BaseSCIMClient:
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> tuple[str, Union[AnyResource, dict], Optional[list[type[Resource]]], dict]:
-        if resource_type and check_request_payload:
-            self.check_resource_type(resource_type)
+        if resource_model and check_request_payload:
+            self.check_resource_model(resource_model)
 
         payload: Optional[SearchRequest]
         if not check_request_payload:
@@ -416,25 +418,25 @@ class BaseSCIMClient:
         else:
             payload = None
 
-        url = kwargs.pop("url", self.resource_endpoint(resource_type))
+        url = kwargs.pop("url", self.resource_endpoint(resource_model))
 
-        if resource_type is None:
+        if resource_model is None:
             expected_types = [
-                *self.resource_types,
-                ListResponse[Union[self.resource_types]],
+                *self.resource_models,
+                ListResponse[Union[self.resource_models]],
             ]
 
-        elif resource_type == ServiceProviderConfig:
-            expected_types = [resource_type]
+        elif resource_model == ServiceProviderConfig:
+            expected_types = [resource_model]
             if id:
                 raise SCIMClientError("ServiceProviderConfig cannot have an id")
 
         elif id:
-            expected_types = [resource_type]
+            expected_types = [resource_model]
             url = f"{url}/{id}"
 
         else:
-            expected_types = [ListResponse[resource_type]]
+            expected_types = [ListResponse[resource_model]]
 
         return url, payload, expected_types, kwargs
 
@@ -449,7 +451,7 @@ class BaseSCIMClient:
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
         """Perform a POST search request to read all available resources, as defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
 
-        :param resource_types: Resource type or union of types expected
+        :param resource_models: Resource type or union of types expected
             to be read from the response.
         :param search_request: An object detailing the search query parameters.
         :param check_request_payload: If :data:`False`,
@@ -466,7 +468,7 @@ class BaseSCIMClient:
 
         :return:
             - A :class:`~scim2_models.Error` object in case of error.
-            - A :class:`~scim2_models.ListResponse[resource_type]` object in case of success.
+            - A :class:`~scim2_models.ListResponse[resource_model]` object in case of success.
 
         :usage:
 
@@ -510,12 +512,12 @@ class BaseSCIMClient:
             )
 
         url = kwargs.pop("url", "/.search")
-        expected_types = [ListResponse[Union[self.resource_types]]]
+        expected_types = [ListResponse[Union[self.resource_models]]]
         return url, payload, expected_types, kwargs
 
     def delete(
         self,
-        resource_type: type,
+        resource_model: type,
         id: str,
         check_response_payload: bool = True,
         expected_status_codes: Optional[list[int]] = DELETION_RESPONSE_STATUS_CODES,
@@ -524,7 +526,7 @@ class BaseSCIMClient:
     ) -> Optional[Union[Error, dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6 <7644#section-3.6>`.
 
-        :param resource_type: The type of the resource to delete.
+        :param resource_model: The type of the resource to delete.
         :param id: The type id the resource to delete.
         :param check_response_payload: Whether to validate that the response payload is valid.
             If set, the raw payload will be returned.
@@ -554,15 +556,15 @@ class BaseSCIMClient:
 
     def prepare_delete_request(
         self,
-        resource_type: type,
+        resource_model: type,
         id: str,
         check_response_payload: bool = True,
         expected_status_codes: Optional[list[int]] = DELETION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> tuple[str, dict]:
-        self.check_resource_type(resource_type)
-        delete_url = self.resource_endpoint(resource_type) + f"/{id}"
+        self.check_resource_model(resource_model)
+        delete_url = self.resource_endpoint(resource_model) + f"/{id}"
         url = kwargs.pop("url", delete_url)
         return url, kwargs
 
@@ -630,25 +632,25 @@ class BaseSCIMClient:
 
         else:
             if isinstance(resource, Resource):
-                resource_type = resource.__class__
+                resource_model = resource.__class__
 
             else:
-                resource_type = Resource.get_by_payload(self.resource_types, resource)
-                if not resource_type:
+                resource_model = Resource.get_by_payload(self.resource_models, resource)
+                if not resource_model:
                     raise SCIMRequestError(
                         "Cannot guess resource type from the payload",
                         source=resource,
                     )
 
                 try:
-                    resource = resource_type.model_validate(resource)
+                    resource = resource_model.model_validate(resource)
                 except ValidationError as exc:
                     scim_validation_exc = RequestPayloadValidationError(source=resource)
                     if sys.version_info >= (3, 11):  # pragma: no cover
                         scim_validation_exc.add_note(str(exc))
                     raise scim_validation_exc from exc
 
-            self.check_resource_type(resource_type, resource)
+            self.check_resource_model(resource_model, resource)
 
             if not resource.id:
                 raise SCIMRequestError("Resource must have an id", source=resource)

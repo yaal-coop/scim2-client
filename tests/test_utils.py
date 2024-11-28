@@ -7,7 +7,7 @@ from scim2_client.engines.httpx import SyncSCIMClient
 
 
 def test_guess_resource_endpoint():
-    client = SyncSCIMClient(None, resource_types=[User[EnterpriseUser], Group])
+    client = SyncSCIMClient(None, resource_models=[User[EnterpriseUser], Group])
     assert client.resource_endpoint(Group) == "/Groups"
     assert client.resource_endpoint(User) == "/Users"
     assert client.resource_endpoint(User[EnterpriseUser]) == "/Users"

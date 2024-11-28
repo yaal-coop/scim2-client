@@ -52,7 +52,7 @@ def test_replace_user(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.replace(user)
     assert response.model_dump() == user.model_dump()
 
@@ -95,7 +95,7 @@ def test_replace_user_dict(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.replace(user.model_dump())
     assert response.model_dump() == user.model_dump()
 
@@ -127,7 +127,7 @@ def test_replace_user_dict_bad_schema(httpserver):
     }
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(
         SCIMClientError, match="Cannot guess resource type from the payload"
     ):
@@ -157,7 +157,7 @@ def test_dont_check_response_payload(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.replace(user, check_response_payload=False)
     assert response == {"foo": "bar"}
 
@@ -192,7 +192,7 @@ def test_dont_check_request_payload(httpserver):
     }
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.replace(
         user,
         check_request_payload=False,
@@ -244,7 +244,7 @@ def test_errors(httpserver, code):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     response = scim_client.replace(user_request, raise_scim_errors=False)
 
     assert response == Error(
@@ -291,15 +291,15 @@ def test_user_with_no_id(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(SCIMClientError, match="Resource must have an id"):
         scim_client.replace(user)
 
 
-def test_invalid_resource_type(httpserver):
-    """Test that resource_types passed to the method must be part of BaseSCIMClient.resource_types."""
+def test_invalid_resource_model(httpserver):
+    """Test that resource_models passed to the method must be part of BaseSCIMClient.resource_models."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
         scim_client.replace(Group(display_name="foobar"))
 
@@ -307,7 +307,7 @@ def test_invalid_resource_type(httpserver):
 def test_request_validation_error(httpserver):
     """Test that incorrect input raise a RequestPayloadValidationError."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(
         RequestPayloadValidationError, match="Server request payload validation error"
     ):
@@ -322,7 +322,7 @@ def test_request_validation_error(httpserver):
 def test_request_network_error(httpserver):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_models=(User,))
     user_request = User(user_name="bjensen@example.com", id="anything")
     with pytest.raises(
         RequestNetworkError, match="Network error happened during request"

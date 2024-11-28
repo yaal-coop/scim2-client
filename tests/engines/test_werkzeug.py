@@ -31,7 +31,7 @@ def scim_provider():
 
 @pytest.fixture
 def scim_client(scim_provider):
-    return TestSCIMClient(app=scim_provider, resource_types=(User,))
+    return TestSCIMClient(app=scim_provider, resource_models=(User,))
 
 
 def test_werkzeug_engine(scim_client):

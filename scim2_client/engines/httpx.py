@@ -52,9 +52,9 @@ class SyncSCIMClient(BaseSCIMClient):
     """
 
     def __init__(
-        self, client: Client, resource_types: Optional[tuple[type[Resource]]] = None
+        self, client: Client, resource_models: Optional[tuple[type[Resource]]] = None
     ):
-        super().__init__(resource_types=resource_types)
+        super().__init__(resource_models=resource_models)
         self.client = client
 
     def create(
@@ -94,7 +94,7 @@ class SyncSCIMClient(BaseSCIMClient):
 
     def query(
         self,
-        resource_type: Optional[type[Resource]] = None,
+        resource_model: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
         check_request_payload: bool = True,
@@ -106,7 +106,7 @@ class SyncSCIMClient(BaseSCIMClient):
         **kwargs,
     ):
         url, payload, expected_types, request_kwargs = self.prepare_query_request(
-            resource_type=resource_type,
+            resource_model=resource_model,
             id=id,
             search_request=search_request,
             check_request_payload=check_request_payload,
@@ -168,7 +168,7 @@ class SyncSCIMClient(BaseSCIMClient):
 
     def delete(
         self,
-        resource_type: type,
+        resource_model: type,
         id: str,
         check_response_payload: bool = True,
         expected_status_codes: Optional[
@@ -178,7 +178,7 @@ class SyncSCIMClient(BaseSCIMClient):
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
         url, request_kwargs = self.prepare_delete_request(
-            resource_type=resource_type,
+            resource_model=resource_model,
             id=id,
             check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,

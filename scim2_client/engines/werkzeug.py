@@ -34,14 +34,14 @@ class TestSCIMClient(BaseSCIMClient):
 
     :param client: A WSGI application instance that will be used to send requests.
     :param scim_prefix: The scim root endpoint in the application.
-    :param resource_types: The client resource types.
+    :param resource_models: The client resource types.
 
     .. code-block:: python
 
         from scim2_client.engines.werkzeug import TestSCIMClient
         from scim2_models import User, Group
 
-        testclient = TestSCIMClient(app=scim_provider, resource_types=(User, Group))
+        testclient = TestSCIMClient(app=scim_provider, resource_models=(User, Group))
 
         request_user = User(user_name="foo", display_name="bar")
         response_user = scim_client.create(request_user)
@@ -52,9 +52,9 @@ class TestSCIMClient(BaseSCIMClient):
         self,
         app,
         scim_prefix: str = "",
-        resource_types: Optional[tuple[type[Resource]]] = None,
+        resource_models: Optional[tuple[type[Resource]]] = None,
     ):
-        super().__init__(resource_types=resource_types)
+        super().__init__(resource_models=resource_models)
         self.client = Client(app)
         self.scim_prefix = scim_prefix
 
@@ -102,7 +102,7 @@ class TestSCIMClient(BaseSCIMClient):
 
     def query(
         self,
-        resource_type: Optional[type[Resource]] = None,
+        resource_model: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
         check_request_payload: bool = True,
@@ -114,7 +114,7 @@ class TestSCIMClient(BaseSCIMClient):
         **kwargs,
     ):
         url, payload, expected_types, request_kwargs = self.prepare_query_request(
-            resource_type=resource_type,
+            resource_model=resource_model,
             id=id,
             search_request=search_request,
             check_request_payload=check_request_payload,
@@ -177,7 +177,7 @@ class TestSCIMClient(BaseSCIMClient):
 
     def delete(
         self,
-        resource_type: type,
+        resource_model: type,
         id: str,
         check_response_payload: bool = True,
         expected_status_codes: Optional[
@@ -187,7 +187,7 @@ class TestSCIMClient(BaseSCIMClient):
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
         url, request_kwargs = self.prepare_delete_request(
-            resource_type=resource_type,
+            resource_model=resource_model,
             id=id,
             check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
