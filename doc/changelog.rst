@@ -7,12 +7,14 @@ Changelog
 .. warning::
 
     This version comes with breaking changes:
+
     - `httpx` is no longer a direct dependency, it is shipped in the `httpx` packaging extra.
     - Use ``scim2_client.engines.httpx.SyncSCIMClient`` instead of ``scim2_client.SCIMClient``.
 
 Added
 ^^^^^
 - The `Unknown resource type` request error keeps a reference to the faulty payload.
+- New `werkzeug` request engine for application development purpose.
 
 Changed
 ^^^^^^^
