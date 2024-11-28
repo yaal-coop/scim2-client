@@ -548,7 +548,7 @@ def test_response_bad_content_type(client):
 
 
 def test_search_request(httpserver, client):
-    query_string = "attributes=userName&attributes=displayName&filter=userName%20Eq%20%22john%22&sortBy=userName&sortOrder=ascending&startIndex=1&count=10"
+    query_string = "attributes=userName&attributes=displayName&filter=userName+Eq+%22john%22&sortBy=userName&sortOrder=ascending&startIndex=1&count=10"
 
     httpserver.expect_request(
         "/Users/with-qs", query_string=query_string
@@ -590,7 +590,7 @@ def test_search_request(httpserver, client):
 
 def test_query_dont_check_request_payload(httpserver, client):
     """Test the check_request_payload attribute on query."""
-    query_string = "attributes=userName&attributes=displayName&excluded_attributes=timezone&excluded_attributes=phoneNumbers&filter=userName%20Eq%20%22john%22&sort_by=userName&sort_order=ascending&start_index=1&count=10"
+    query_string = "attributes=userName&attributes=displayName&excluded_attributes=timezone&excluded_attributes=phoneNumbers&filter=userName+Eq+%22john%22&sort_by=userName&sort_order=ascending&start_index=1&count=10"
 
     httpserver.expect_request(
         "/Users/with-qs", query_string=query_string
