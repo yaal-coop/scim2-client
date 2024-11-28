@@ -1,12 +1,20 @@
 Changelog
 =========
 
-[0.2.3] - Unreleased
+[0.3.0] - Unreleased
 --------------------
+
+.. warning::
+
+   Use ``SyncSCIMClient`` instead of ``SCIMClient``
 
 Added
 ^^^^^
 - The `Unknown resource type` request error keeps a reference to the faulty payload.
+
+Changed
+^^^^^^^
+- Separate httpx network code and SCIM code in separate file as a basis for async support (and maybe other request engines).
 
 [0.2.2] - 2024-11-12
 --------------------

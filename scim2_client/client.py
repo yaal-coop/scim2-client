@@ -1,13 +1,7 @@
-import json
-import json.decoder
 import sys
-from contextlib import contextmanager
 from typing import Optional
 from typing import Union
 
-from httpx import Client
-from httpx import RequestError
-from httpx import Response
 from pydantic import ValidationError
 from scim2_models import AnyResource
 from scim2_models import Context
@@ -20,16 +14,14 @@ from scim2_models import Schema
 from scim2_models import SearchRequest
 from scim2_models import ServiceProviderConfig
 
-from .errors import RequestNetworkError
-from .errors import RequestPayloadValidationError
-from .errors import ResponsePayloadValidationError
-from .errors import SCIMClientError
-from .errors import SCIMRequestError
-from .errors import SCIMResponseError
-from .errors import SCIMResponseErrorObject
-from .errors import UnexpectedContentFormat
-from .errors import UnexpectedContentType
-from .errors import UnexpectedStatusCode
+from scim2_client.errors import RequestPayloadValidationError
+from scim2_client.errors import ResponsePayloadValidationError
+from scim2_client.errors import SCIMClientError
+from scim2_client.errors import SCIMRequestError
+from scim2_client.errors import SCIMResponseError
+from scim2_client.errors import SCIMResponseErrorObject
+from scim2_client.errors import UnexpectedContentType
+from scim2_client.errors import UnexpectedStatusCode
 
 BASE_HEADERS = {
     "Accept": "application/scim+json",
@@ -37,22 +29,14 @@ BASE_HEADERS = {
 }
 
 
-@contextmanager
-def handle_httpx_request_error(payload=None):
-    try:
-        yield
-    except RequestError as exc:
-        scim_network_exc = RequestNetworkError(source=payload)
-        if sys.version_info >= (3, 11):  # pragma: no cover
-            scim_network_exc.add_note(str(exc))
-        raise scim_network_exc from exc
+class BaseSCIMClient:
+    """The base model for request clients.
 
+    It goal is to parse the requests and responses and check if they comply with the SCIM specifications.
 
-class SCIMClient:
-    """An object that perform SCIM requests and validate responses.
+    This class can be inherited and used as a basis for request engine integration.
 
-    :param client: A :class:`httpx.Client` instance that will be used to send requests.
-    :param resource_types: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIMClient.
+    :param resource_types: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
         If a request payload describe a resource that is not in this list, an exception will be raised.
 
     .. note::
@@ -140,10 +124,7 @@ class SCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    def __init__(
-        self, client: Client, resource_types: Optional[tuple[type[Resource]]] = None
-    ):
-        self.client = client
+    def __init__(self, resource_types: Optional[tuple[type[Resource]]] = None):
         self.resource_types = tuple(
             set(resource_types or []) | {ResourceType, Schema, ServiceProviderConfig}
         )
@@ -171,15 +152,17 @@ class SCIMClient:
 
     def check_response(
         self,
-        response: Response,
+        payload: Optional[dict],
+        status_code: int,
+        headers: dict,
         expected_status_codes: Optional[list[int]] = None,
         expected_types: Optional[list[type[Resource]]] = None,
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
         scim_ctx: Optional[Context] = None,
     ) -> Union[Error, None, dict, type[Resource]]:
-        if expected_status_codes and response.status_code not in expected_status_codes:
-            raise UnexpectedStatusCode(source=response)
+        if expected_status_codes and status_code not in expected_status_codes:
+            raise UnexpectedStatusCode()
 
         # Interoperability considerations:  The "application/scim+json" media
         # type is intended to identify JSON structure data that conforms to
@@ -187,24 +170,21 @@ class SCIMClient:
         # SCIM are known to informally use "application/json".
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-8.1
 
-        actual_content_type = response.headers.get("content-type", "").split(";").pop(0)
+        actual_content_type = headers.get("content-type", "").split(";").pop(0)
         expected_response_content_types = ("application/scim+json", "application/json")
         if actual_content_type not in expected_response_content_types:
-            raise UnexpectedContentType(source=response)
+            raise UnexpectedContentType(content_type=actual_content_type)
 
         # In addition to returning an HTTP response code, implementers MUST return
         # the errors in the body of the response in a JSON format
         # https://datatracker.ietf.org/doc/html/rfc7644.html#section-3.12
 
         no_content_status_codes = [204, 205]
-        if response.status_code in no_content_status_codes:
+        if status_code in no_content_status_codes:
             response_payload = None
 
         else:
-            try:
-                response_payload = response.json()
-            except json.decoder.JSONDecodeError as exc:
-                raise UnexpectedContentFormat(source=response) from exc
+            response_payload = payload
 
         if not check_response_payload:
             return response_payload
@@ -235,12 +215,12 @@ class SCIMClient:
                     f"Expected type {expected} but got undefined object with no schema"
                 )
 
-            raise SCIMResponseError(message, source=response)
+            raise SCIMResponseError(message)
 
         try:
             return actual_type.model_validate(response_payload, scim_ctx=scim_ctx)
         except ValidationError as exc:
-            scim_exc = ResponsePayloadValidationError(source=response)
+            scim_exc = ResponsePayloadValidationError()
             if sys.version_info >= (3, 11):  # pragma: no cover
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
@@ -291,6 +271,17 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
+        raise NotImplementedError()
+
+    def prepare_create_request(
+        self,
+        resource: Union[AnyResource, dict],
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = CREATION_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> tuple[str, Union[AnyResource, dict], Optional[list[type[Resource]]], dict]:
         if not check_request_payload:
             payload = resource
             url = kwargs.pop("url", None)
@@ -318,17 +309,9 @@ class SCIMClient:
             url = kwargs.pop("url", self.resource_endpoint(resource_type))
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
 
-        with handle_httpx_request_error(payload):
-            response = self.client.post(url, json=payload, **kwargs)
+        expected_types = [resource.__class__] if check_request_payload else None
 
-        return self.check_response(
-            response=response,
-            expected_status_codes=expected_status_codes,
-            expected_types=([resource.__class__] if check_request_payload else None),
-            check_response_payload=check_response_payload,
-            raise_scim_errors=raise_scim_errors,
-            scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
-        )
+        return url, payload, expected_types, kwargs
 
     def query(
         self,
@@ -404,6 +387,19 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
+        raise NotImplementedError()
+
+    def prepare_query_request(
+        self,
+        resource_type: Optional[type[Resource]] = None,
+        id: Optional[str] = None,
+        search_request: Optional[Union[SearchRequest, dict]] = None,
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = QUERY_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> tuple[str, Union[AnyResource, dict], Optional[list[type[Resource]]], dict]:
         if resource_type and check_request_payload:
             self.check_resource_type(resource_type)
 
@@ -440,17 +436,7 @@ class SCIMClient:
         else:
             expected_types = [ListResponse[resource_type]]
 
-        with handle_httpx_request_error(payload):
-            response = self.client.get(url, params=payload, **kwargs)
-
-        return self.check_response(
-            response=response,
-            expected_status_codes=expected_status_codes,
-            expected_types=expected_types,
-            check_response_payload=check_response_payload,
-            raise_scim_errors=raise_scim_errors,
-            scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
-        )
+        return url, payload, expected_types, kwargs
 
     def search(
         self,
@@ -500,6 +486,17 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
+        raise NotImplementedError()
+
+    def prepare_search_request(
+        self,
+        search_request: Optional[SearchRequest] = None,
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = SEARCH_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> tuple[str, Union[AnyResource, dict], Optional[list[type[Resource]]], dict]:
         if not check_request_payload:
             payload = search_request
 
@@ -513,18 +510,8 @@ class SCIMClient:
             )
 
         url = kwargs.pop("url", "/.search")
-
-        with handle_httpx_request_error(payload):
-            response = self.client.post(url, json=payload)
-
-        return self.check_response(
-            response=response,
-            expected_status_codes=expected_status_codes,
-            expected_types=[ListResponse[Union[self.resource_types]]],
-            check_response_payload=check_response_payload,
-            raise_scim_errors=raise_scim_errors,
-            scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
-        )
+        expected_types = [ListResponse[Union[self.resource_types]]]
+        return url, payload, expected_types, kwargs
 
     def delete(
         self,
@@ -563,19 +550,21 @@ class SCIMClient:
             response = scim.delete(User, "foobar")
             # 'response' may be None, or an Error object
         """
+        raise NotImplementedError()
+
+    def prepare_delete_request(
+        self,
+        resource_type: type,
+        id: str,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = DELETION_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> tuple[str, dict]:
         self.check_resource_type(resource_type)
         delete_url = self.resource_endpoint(resource_type) + f"/{id}"
         url = kwargs.pop("url", delete_url)
-
-        with handle_httpx_request_error():
-            response = self.client.delete(url, **kwargs)
-
-        return self.check_response(
-            response=response,
-            expected_status_codes=expected_status_codes,
-            check_response_payload=check_response_payload,
-            raise_scim_errors=raise_scim_errors,
-        )
+        return url, kwargs
 
     def replace(
         self,
@@ -624,6 +613,17 @@ class SCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
+        raise NotImplementedError()
+
+    def prepare_replace_request(
+        self,
+        resource: Union[AnyResource, dict],
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = REPLACEMENT_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> tuple[str, Union[AnyResource, dict], Optional[list[type[Resource]]], dict]:
         if not check_request_payload:
             payload = resource
             url = kwargs.pop("url", None)
@@ -658,17 +658,8 @@ class SCIMClient:
                 "url", self.resource_endpoint(resource.__class__) + f"/{resource.id}"
             )
 
-        with handle_httpx_request_error(payload):
-            response = self.client.put(url, json=payload, **kwargs)
-
-        return self.check_response(
-            response=response,
-            expected_status_codes=expected_status_codes,
-            expected_types=([resource.__class__] if check_request_payload else None),
-            check_response_payload=check_response_payload,
-            raise_scim_errors=raise_scim_errors,
-            scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
-        )
+        expected_types = [resource.__class__] if check_request_payload else None
+        return url, payload, expected_types, kwargs
 
     def modify(
         self, resource: Union[AnyResource, dict], op: PatchOp, **kwargs

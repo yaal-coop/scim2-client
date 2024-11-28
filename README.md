@@ -29,10 +29,10 @@ Here is an example of usage:
 import datetime
 from httpx import Client
 from scim2_models import User, EnterpriseUser, Group, Error
-from scim2_client import SCIMClient
+from scim2_client.engines.httpx import SyncSCIMClient
 
 client = Client(base_url="https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-scim = SCIMClient(client, resource_types=(User[EnterpriseUser], Group))
+scim = SyncSCIMClient(client, resource_types=(User[EnterpriseUser], Group))
 
 # Query resources
 user = scim.query(User[EnterpriseUser], "2819c223-7f76-453a-919d-413861904646")
