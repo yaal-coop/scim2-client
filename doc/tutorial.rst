@@ -83,6 +83,19 @@ To achieve this, all the methods provide the following parameters, all are :data
    which value will excluded from the request payload, and which values are
    expected in the response payload.
 
+Engines
+=======
+
+scim2-client comes with a light abstraction layers that allows for different requests engines.
+Currently those engines are shipped:
+
+- :class:`~scim2_client.engines.httpx.SyncSCIMClient`: A synchronous engine using `httpx <https://github.com/encode/httpx>`_ to perform the HTTP requests.
+- :class:`~scim2_client.engines.werkzeug.TestSCIMClient`: A test engine for development purposes.
+  It takes a WSGI app and directly execute the server code instead of performing real HTTP requests.
+  This is faster in unit test suites, and helpful to catch the server exceptions.
+
+You can easily implement your own engine by inheriting from :class:`~scim2_client.BaseSCIMClient`.
+
 Additional request parameters
 =============================
 

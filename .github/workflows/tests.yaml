@@ -31,6 +31,8 @@ jobs:
           enable-cache: true
       - name: Install Python ${{ matrix.python }}
         run: uv python install ${{ matrix.python }}
+      - name: Install dependencies
+        run: uv sync --all-extras
       - name: Run tests
         run: uv run pytest --showlocals
 
@@ -44,7 +46,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install minimum dependencies
-        run: uv sync --resolution=lowest-direct
+        run: uv sync --resolution=lowest-direct --all-extras
       - name: Run tests
         run: uv run pytest --showlocals
 
