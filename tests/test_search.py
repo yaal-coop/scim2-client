@@ -10,7 +10,7 @@ from scim2_models import SearchRequest
 from scim2_models import User
 
 from scim2_client import RequestNetworkError
-from scim2_client import SCIMClient
+from scim2_client import SyncSCIMClient
 
 
 def test_all_objects(httpserver):
@@ -50,7 +50,7 @@ def test_all_objects(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(
+    scim_client = SyncSCIMClient(
         client,
         resource_types=(
             User,
@@ -127,7 +127,7 @@ def test_search_request(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(
+    scim_client = SyncSCIMClient(
         client,
         resource_types=(
             User,
@@ -156,7 +156,7 @@ def test_dont_check_response(httpserver):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(
+    scim_client = SyncSCIMClient(
         client,
         resource_types=(
             User,
@@ -203,7 +203,7 @@ def test_dont_check_request_payload(httpserver):
     }
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(
+    scim_client = SyncSCIMClient(
         client,
         resource_types=(
             User,
@@ -227,7 +227,7 @@ def test_errors(httpserver, code):
     )
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(
+    scim_client = SyncSCIMClient(
         client,
         resource_types=(
             User,
@@ -246,7 +246,7 @@ def test_errors(httpserver, code):
 def test_request_network_error(httpserver):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     with pytest.raises(
         RequestNetworkError, match="Network error happened during request"
     ):

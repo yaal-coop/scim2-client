@@ -9,9 +9,9 @@ from scim2_models import User
 
 from scim2_client import RequestNetworkError
 from scim2_client import RequestPayloadValidationError
-from scim2_client import SCIMClient
 from scim2_client import SCIMClientError
 from scim2_client import SCIMRequestError
+from scim2_client import SyncSCIMClient
 from scim2_client import UnexpectedStatusCode
 
 
@@ -36,7 +36,7 @@ def test_create_user(httpserver):
     user_request = User(user_name="bjensen@example.com")
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request)
 
     user_created = User(
@@ -81,7 +81,7 @@ def test_create_dict_user(httpserver):
     }
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request)
 
     user_created = User(
@@ -126,7 +126,7 @@ def test_create_dict_user_bad_schema(httpserver):
     }
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     with pytest.raises(
         SCIMClientError, match="Cannot guess resource type from the payload"
     ):
@@ -142,8 +142,8 @@ def test_dont_check_response_payload(httpserver):
     user_request = User(user_name="bjensen@example.com")
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
-    response = scim_client.create(user_request, check_response_payload=False)
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
+    response = scim_client.create(resource=user_request, check_response_payload=False)
     assert response == {"foo": "bar"}
 
 
@@ -174,9 +174,9 @@ def test_dont_check_request_payload(httpserver):
     }
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     response = scim_client.create(
-        user_request, check_request_payload=False, url="/Users"
+        resource=user_request, check_request_payload=False, url="/Users"
     )
 
     user_created = {
@@ -209,7 +209,7 @@ def test_conflict(httpserver):
     user_request = User(user_name="bjensen@example.com")
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request, raise_scim_errors=False)
     assert response == Error(
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
@@ -240,7 +240,7 @@ def test_no_200(httpserver):
     user_request = User(user_name="bjensen@example.com")
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     with pytest.raises(UnexpectedStatusCode):
         scim_client.create(user_request)
     scim_client.create(user_request, expected_status_codes=None)
@@ -262,7 +262,7 @@ def test_errors(httpserver, code):
     user_request = User(user_name="bjensen@example.com")
 
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     response = scim_client.create(user_request, raise_scim_errors=False)
 
     assert response == Error(
@@ -273,9 +273,9 @@ def test_errors(httpserver, code):
 
 
 def test_invalid_resource_type(httpserver):
-    """Test that resource_types passed to the method must be part of SCIMClient.resource_types."""
+    """Test that resource_types passed to the method must be part of BaseSCIMClient.resource_types."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
         scim_client.create(Group(display_name="foobar"))
 
@@ -283,7 +283,7 @@ def test_invalid_resource_type(httpserver):
 def test_request_validation_error(httpserver):
     """Test that incorrect input raise a RequestPayloadValidationError."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     with pytest.raises(
         RequestPayloadValidationError, match="Server request payload validation error"
     ):
@@ -298,7 +298,7 @@ def test_request_validation_error(httpserver):
 def test_request_network_error(httpserver):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
     client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SCIMClient(client, resource_types=(User,))
+    scim_client = SyncSCIMClient(client, resource_types=(User,))
     user_request = User(user_name="bjensen@example.com")
     with pytest.raises(
         RequestNetworkError, match="Network error happened during request"

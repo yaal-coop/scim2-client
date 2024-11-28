@@ -35,7 +35,7 @@ class RequestNetworkError(SCIMRequestError):
 
 
 class RequestPayloadValidationError(SCIMRequestError):
-    """Error raised when an invalid request payload has been passed to SCIMClient.
+    """Error raised when an invalid request payload has been passed to BaseSCIMClient.
 
     This error is raised when a :class:`pydantic.ValidationError` has been caught
     while validating the client request payload.
@@ -72,7 +72,9 @@ class SCIMResponseErrorObject(SCIMResponseError):
     def __init__(self, *args, **kwargs):
         message = kwargs.pop(
             "message",
-            f"The server returned a SCIM Error object: {kwargs['source'].detail}",
+            f"The server returned a SCIM Error object: {kwargs['source'].detail}"
+            if kwargs.get("source")
+            else "The server returned a SCIM Error object",
         )
         super().__init__(message, *args, **kwargs)
 
@@ -83,7 +85,9 @@ class UnexpectedStatusCode(SCIMResponseError):
     def __init__(self, *args, **kwargs):
         message = kwargs.pop(
             "message",
-            f"Unexpected response status code: {kwargs['source'].status_code}",
+            f"Unexpected response status code: {kwargs['source'].status_code}"
+            if kwargs.get("source")
+            else "Unexpected response status code",
         )
         super().__init__(message, *args, **kwargs)
 
@@ -91,8 +95,7 @@ class UnexpectedStatusCode(SCIMResponseError):
 class UnexpectedContentType(SCIMResponseError):
     """Error raised when a server returned an unexpected `Content-Type` header in a response."""
 
-    def __init__(self, *args, **kwargs):
-        content_type = kwargs["source"].headers.get("content-type", "")
+    def __init__(self, content_type, *args, **kwargs):
         message = kwargs.pop("message", f"Unexpected content type: {content_type}")
         super().__init__(message, *args, **kwargs)
 
