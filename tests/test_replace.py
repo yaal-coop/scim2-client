@@ -11,7 +11,7 @@ from scim2_client import RequestNetworkError
 from scim2_client import RequestPayloadValidationError
 from scim2_client import SCIMClientError
 from scim2_client import SCIMRequestError
-from scim2_client import SyncSCIMClient
+from scim2_client.engines.httpx import SyncSCIMClient
 
 
 def test_replace_user(httpserver):

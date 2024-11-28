@@ -27,8 +27,12 @@ classifiers = [
 
 requires-python = ">= 3.9"
 dependencies = [
-    "httpx>=0.24.0",
     "scim2-models>=0.2.0",
+]
+
+[project.optional-dependencies]
+httpx = [
+    "httpx>=0.24.0",
 ]
 
 [project.urls]
@@ -39,12 +43,12 @@ funding = "https://github.com/sponsors/python-scim"
 
 [dependency-groups]
 dev = [
+    "mypy>=1.13.0",
     "pre-commit-uv>=4.1.4",
     "pytest>=8.2.1",
     "pytest-coverage>=0.0",
     "pytest-httpserver>=1.0.10",
     "tox-uv>=1.16.0",
-    "mypy>=1.13.0",
 ]
 doc = [
     "autodoc-pydantic>=2.2.0",

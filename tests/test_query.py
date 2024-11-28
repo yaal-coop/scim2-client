@@ -12,7 +12,7 @@ from scim2_models import ServiceProviderConfig
 from scim2_models import User
 
 from scim2_client import SCIMRequestError
-from scim2_client import SyncSCIMClient
+from scim2_client.engines.httpx import SyncSCIMClient
 from scim2_client.errors import RequestNetworkError
 from scim2_client.errors import ResponsePayloadValidationError
 from scim2_client.errors import SCIMClientError

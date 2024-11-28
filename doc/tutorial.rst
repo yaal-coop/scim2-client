@@ -4,18 +4,20 @@ Tutorial
 Initialization
 ==============
 
-scim2-client depends on `httpx <https://github.com/encode/httpx>`_ to perform network requests.
-As a start you will need to instantiate a httpx :code:`Client` object that you can parameter as your will, and then pass it to a :class:`~scim2_client.SCIMClient` object.
+scim2-client depends on request engines such as `httpx <https://github.com/encode/httpx>`_ to perform network requests.
+This tutorial demonstrate how to use scim2-client with httpx, and suppose you have installed the `httpx` extra for example with ``pip install scim2-models[httpx]``.
+
+As a start you will need to instantiate a httpx :code:`Client` object that you can parameter as your will, and then pass it to a :class:`SCIM client <scim2_client.BaseSCIMClient>` object.
 In addition to your SCIM server root endpoint, you will probably want to provide some authorization headers through the httpx :code:`Client` :code:`headers` parameter:
 
 .. code-block:: python
 
     from httpx import Client
     from scim2_models import User, EnterpriseUserUser, Group
-    from scim2_client import SCIMClient
+    from scim2_client.engines.httpx import SyncSCIMClient
 
     client = Client(base_url="https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-    scim = SCIMClient(client, resource_types=(User[EnterpriseUser], Group))
+    scim = SyncSCIMClient(client, resource_types=(User[EnterpriseUser], Group))
 
 You need to give to indicate to :class:`~scim2_client.SCIMClient` all the different :class:`~scim2_models.Resource` types that you will need to manipulate with the :code:`resource_types` parameter.
 This is needed so scim2-client will be able to guess which resource type to instante when an arbitrary payload is met.
@@ -31,11 +33,11 @@ Performing actions
 scim2-client allows your application to interact with a SCIM server as described in :rfc:`RFC7644 §3 <7644#section-3>`, so you can read and manage the resources.
 The following actions are available:
 
-- :meth:`~scim2_client.SCIMClient.create`
-- :meth:`~scim2_client.SCIMClient.query`
-- :meth:`~scim2_client.SCIMClient.replace`
-- :meth:`~scim2_client.SCIMClient.delete`
-- :meth:`~scim2_client.SCIMClient.search`
+- :meth:`~scim2_client.BaseSCIMClient.create`
+- :meth:`~scim2_client.BaseSCIMClient.query`
+- :meth:`~scim2_client.BaseSCIMClient.replace`
+- :meth:`~scim2_client.BaseSCIMClient.delete`
+- :meth:`~scim2_client.BaseSCIMClient.search`
 
 Have a look at the :doc:`reference` to see usage examples and the exhaustive set of parameters, but generally it looks like this:
 
@@ -58,7 +60,7 @@ Have a look at the :doc:`reference` to see usage examples and the exhaustive set
 Request and response validation
 ===============================
 
-By default, the data passed to the :class:`~scim2_client.SCIMClient` as well as the server response will be validated against the SCIM specifications, and will raise an error if they don't respect them.
+By default, the data passed to the :class:`SCIM client <scim2_client.BaseSCIMClient>` as well as the server response will be validated against the SCIM specifications, and will raise an error if they don't respect them.
 However sometimes you want to accept invalid inputs and outputs.
 To achieve this, all the methods provide the following parameters, all are :data:`True` by default:
 
@@ -84,7 +86,7 @@ To achieve this, all the methods provide the following parameters, all are :data
 Additional request parameters
 =============================
 
-Any additional parameter will be passed to the underlying httpx methods.
+Any additional parameter will be passed to the underlying engine methods.
 This can be useful if you need to explicitly pass a certain URL for example:
 
 .. code-block:: python

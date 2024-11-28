@@ -6,7 +6,9 @@ Changelog
 
 .. warning::
 
-   Use ``SyncSCIMClient`` instead of ``SCIMClient``
+    This version comes with breaking changes:
+    - `httpx` is no longer a direct dependency, it is shipped in the `httpx` packaging extra.
+    - Use ``scim2_client.engines.httpx.SyncSCIMClient`` instead of ``scim2_client.SCIMClient``.
 
 Added
 ^^^^^

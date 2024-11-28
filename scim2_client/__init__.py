@@ -1,5 +1,4 @@
 from .client import BaseSCIMClient
-from .engines.httpx import SyncSCIMClient
 from .errors import RequestNetworkError
 from .errors import RequestPayloadValidationError
 from .errors import ResponsePayloadValidationError
@@ -13,7 +12,6 @@ from .errors import UnexpectedStatusCode
 
 __all__ = [
     "BaseSCIMClient",
-    "SyncSCIMClient",
     "SCIMClientError",
     "SCIMRequestError",
     "SCIMResponseError",
