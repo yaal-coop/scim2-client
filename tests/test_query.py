@@ -13,14 +13,14 @@ from scim2_models import User
 
 from scim2_client import SCIMClient
 from scim2_client import SCIMRequestError
-from scim2_client.client import UnexpectedContentFormat
-from scim2_client.client import UnexpectedContentType
-from scim2_client.client import UnexpectedStatusCode
 from scim2_client.errors import RequestNetworkError
 from scim2_client.errors import ResponsePayloadValidationError
 from scim2_client.errors import SCIMClientError
 from scim2_client.errors import SCIMResponseError
 from scim2_client.errors import SCIMResponseErrorObject
+from scim2_client.errors import UnexpectedContentFormat
+from scim2_client.errors import UnexpectedContentType
+from scim2_client.errors import UnexpectedStatusCode
 
 
 @pytest.fixture
