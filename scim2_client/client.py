@@ -1,6 +1,7 @@
 import json
 import json.decoder
 import sys
+from contextlib import contextmanager
 from typing import Optional
 from typing import Union
 
@@ -34,6 +35,17 @@ BASE_HEADERS = {
     "Accept": "application/scim+json",
     "Content-Type": "application/scim+json",
 }
+
+
+@contextmanager
+def handle_httpx_request_error(payload=None):
+    try:
+        yield
+    except RequestError as exc:
+        scim_network_exc = RequestNetworkError(source=payload)
+        if sys.version_info >= (3, 11):  # pragma: no cover
+            scim_network_exc.add_note(str(exc))
+        raise scim_network_exc from exc
 
 
 class SCIMClient:
@@ -306,13 +318,8 @@ class SCIMClient:
             url = kwargs.pop("url", self.resource_endpoint(resource_type))
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
 
-        try:
+        with handle_httpx_request_error(payload):
             response = self.client.post(url, json=payload, **kwargs)
-        except RequestError as exc:
-            scim_network_exc = RequestNetworkError(source=payload)
-            if sys.version_info >= (3, 11):  # pragma: no cover
-                scim_network_exc.add_note(str(exc))
-            raise scim_network_exc from exc
 
         return self.check_response(
             response=response,
@@ -433,13 +440,8 @@ class SCIMClient:
         else:
             expected_types = [ListResponse[resource_type]]
 
-        try:
+        with handle_httpx_request_error(payload):
             response = self.client.get(url, params=payload, **kwargs)
-        except RequestError as exc:
-            scim_exc = RequestNetworkError(source=payload)
-            if sys.version_info >= (3, 11):  # pragma: no cover
-                scim_exc.add_note(str(exc))
-            raise scim_exc from exc
 
         return self.check_response(
             response=response,
@@ -512,13 +514,8 @@ class SCIMClient:
 
         url = kwargs.pop("url", "/.search")
 
-        try:
+        with handle_httpx_request_error(payload):
             response = self.client.post(url, json=payload)
-        except RequestError as exc:
-            scim_exc = RequestNetworkError(source=payload)
-            if sys.version_info >= (3, 11):  # pragma: no cover
-                scim_exc.add_note(str(exc))
-            raise scim_exc from exc
 
         return self.check_response(
             response=response,
@@ -570,13 +567,8 @@ class SCIMClient:
         delete_url = self.resource_endpoint(resource_type) + f"/{id}"
         url = kwargs.pop("url", delete_url)
 
-        try:
+        with handle_httpx_request_error():
             response = self.client.delete(url, **kwargs)
-        except RequestError as exc:
-            scim_exc = RequestNetworkError()
-            if sys.version_info >= (3, 11):  # pragma: no cover
-                scim_exc.add_note(str(exc))
-            raise scim_exc from exc
 
         return self.check_response(
             response=response,
@@ -666,13 +658,8 @@ class SCIMClient:
                 "url", self.resource_endpoint(resource.__class__) + f"/{resource.id}"
             )
 
-        try:
+        with handle_httpx_request_error(payload):
             response = self.client.put(url, json=payload, **kwargs)
-        except RequestError as exc:
-            scim_network_exc = RequestNetworkError(source=payload)
-            if sys.version_info >= (3, 11):  # pragma: no cover
-                scim_network_exc.add_note(str(exc))
-            raise scim_network_exc from exc
 
         return self.check_response(
             response=response,
