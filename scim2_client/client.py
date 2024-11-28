@@ -136,9 +136,11 @@ class SCIMClient:
             set(resource_types or []) | {ResourceType, Schema, ServiceProviderConfig}
         )
 
-    def check_resource_type(self, resource_type: type[Resource]) -> None:
+    def check_resource_type(self, resource_type: type[Resource], payload=None) -> None:
         if resource_type not in self.resource_types:
-            raise SCIMRequestError(f"Unknown resource type: '{resource_type}'")
+            raise SCIMRequestError(
+                f"Unknown resource type: '{resource_type}'", source=payload
+            )
 
     def resource_endpoint(self, resource_type: Optional[type[Resource]]) -> str:
         if resource_type is None:
@@ -300,7 +302,7 @@ class SCIMClient:
                         scim_validation_exc.add_note(str(exc))
                     raise scim_validation_exc from exc
 
-            self.check_resource_type(resource_type)
+            self.check_resource_type(resource_type, resource)
             url = kwargs.pop("url", self.resource_endpoint(resource_type))
             payload = resource.model_dump(scim_ctx=Context.RESOURCE_CREATION_REQUEST)
 
@@ -654,7 +656,7 @@ class SCIMClient:
                         scim_validation_exc.add_note(str(exc))
                     raise scim_validation_exc from exc
 
-            self.check_resource_type(resource_type)
+            self.check_resource_type(resource_type, resource)
 
             if not resource.id:
                 raise SCIMRequestError("Resource must have an id", source=resource)

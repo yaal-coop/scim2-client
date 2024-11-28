@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[0.2.3] - Unreleased
+--------------------
+
+Added
+^^^^^
+- The `Unknown resource type` request error keeps a reference to the faulty payload.
+
 [0.2.2] - 2024-11-12
 --------------------
 
