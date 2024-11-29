@@ -717,3 +717,279 @@ class BaseSyncSCIMClient(BaseSCIMClient):
             the response payload.
         """
         raise NotImplementedError()
+
+
+class BaseAsyncSCIMClient(BaseSCIMClient):
+    """Base class for asynchronous request clients."""
+
+    async def create(
+        self,
+        resource: Union[AnyResource, dict],
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.CREATION_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> Union[AnyResource, Error, dict]:
+        """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3 <7644#section-3.3>`.
+
+        :param resource: The resource to create
+            If is a :data:`dict`, the resource type will be guessed from the schema.
+        :param check_request_payload: If :data:`False`,
+            :code:`resource` is expected to be a dict that will be passed as-is in the request.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
+        :param kwargs: Additional parameters passed to the underlying HTTP request
+            library.
+
+        :return:
+            - An :class:`~scim2_models.Error` object in case of error.
+            - The created object as returned by the server in case of success and :code:`check_response_payload` is :data:`True`.
+            - The created object payload as returned by the server in case of success and :code:`check_response_payload` is :data:`False`.
+
+        .. code-block:: python
+            :caption: Creation of a `User` resource
+
+            from scim2_models import User
+
+            request = User(user_name="bjensen@example.com")
+            response = scim.create(request)
+            # 'response' may be a User or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_CREATION_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_CREATION_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
+        """
+        raise NotImplementedError()
+
+    async def query(
+        self,
+        resource_model: Optional[type[Resource]] = None,
+        id: Optional[str] = None,
+        search_request: Optional[Union[SearchRequest, dict]] = None,
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.QUERY_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
+        """Perform a GET request to read resources, as defined in :rfc:`RFC7644 §3.4.2 <7644#section-3.4.2>`.
+
+        - If `id` is not :data:`None`, the resource with the exact id will be reached.
+        - If `id` is :data:`None`, all the resources with the given type will be reached.
+
+        :param resource_model: A :class:`~scim2_models.Resource` subtype or :data:`None`
+        :param id: The SCIM id of an object to get, or :data:`None`
+        :param search_request: An object detailing the search query parameters.
+        :param check_request_payload: If :data:`False`,
+            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
+        :param kwargs: Additional parameters passed to the underlying HTTP request library.
+
+        :return:
+            - A :class:`~scim2_models.Error` object in case of error.
+            - A `resource_model` object in case of success if `id` is not :data:`None`
+            - A :class:`~scim2_models.ListResponse[resource_model]` object in case of success if `id` is :data:`None`
+
+        .. note::
+
+            Querying a :class:`~scim2_models.ServiceProviderConfig` will return a
+            single object, and not a :class:`~scim2_models.ListResponse`.
+
+        :usage:
+
+        .. code-block:: python
+            :caption: Query of a `User` resource knowing its id
+
+            from scim2_models import User
+
+            response = scim.query(User, "my-user-id)
+            # 'response' may be a User or an Error object
+
+        .. code-block:: python
+            :caption: Query of all the `User` resources filtering the ones with `userName` starts with `john`
+
+            from scim2_models import User, SearchRequest
+
+            req = SearchRequest(filter='userName sw "john"')
+            response = scim.query(User, search_request=search_request)
+            # 'response' may be a ListResponse[User] or an Error object
+
+        .. code-block:: python
+            :caption: Query of all the available resources
+
+            from scim2_models import User, SearchRequest
+
+            response = scim.query()
+            # 'response' may be a ListResponse[Union[User, Group, ...]] or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_QUERY_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_QUERY_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
+        """
+        raise NotImplementedError()
+
+    async def search(
+        self,
+        search_request: Optional[SearchRequest] = None,
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.SEARCH_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
+        """Perform a POST search request to read all available resources, as defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
+
+        :param resource_models: Resource type or union of types expected
+            to be read from the response.
+        :param search_request: An object detailing the search query parameters.
+        :param check_request_payload: If :data:`False`,
+            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
+        :param kwargs: Additional parameters passed to the underlying
+            HTTP request library.
+
+        :return:
+            - A :class:`~scim2_models.Error` object in case of error.
+            - A :class:`~scim2_models.ListResponse[resource_model]` object in case of success.
+
+        :usage:
+
+        .. code-block:: python
+            :caption: Searching for all the resources filtering the ones with `id` contains with `admin`
+
+            from scim2_models import User, SearchRequest
+
+            req = SearchRequest(filter='id co "john"')
+            response = scim.search(search_request=search_request)
+            # 'response' may be a ListResponse[User] or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.SEARCH_REQUEST`
+            and :attr:`~scim2_models.Context.SEARCH_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
+        """
+        raise NotImplementedError()
+
+    async def delete(
+        self,
+        resource_model: type,
+        id: str,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.DELETION_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> Optional[Union[Error, dict]]:
+        """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6 <7644#section-3.6>`.
+
+        :param resource_model: The type of the resource to delete.
+        :param id: The type id the resource to delete.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
+        :param kwargs: Additional parameters passed to the underlying
+            HTTP request library.
+
+        :return:
+            - A :class:`~scim2_models.Error` object in case of error.
+            - :data:`None` in case of success.
+
+        :usage:
+
+        .. code-block:: python
+            :caption: Deleting an `User` which `id` is `foobar`
+
+            from scim2_models import User, SearchRequest
+
+            response = scim.delete(User, "foobar")
+            # 'response' may be None, or an Error object
+        """
+        raise NotImplementedError()
+
+    async def replace(
+        self,
+        resource: Union[AnyResource, dict],
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.REPLACEMENT_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> Union[AnyResource, Error, dict]:
+        """Perform a PUT request to replace a resource, as defined in :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
+
+        :param resource: The new resource to replace.
+            If is a :data:`dict`, the resource type will be guessed from the schema.
+        :param check_request_payload: If :data:`False`,
+            :code:`resource` is expected to be a dict that will be passed as-is in the request.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
+        :param kwargs: Additional parameters passed to the underlying
+            HTTP request library.
+
+        :return:
+            - An :class:`~scim2_models.Error` object in case of error.
+            - The updated object as returned by the server in case of success.
+
+        :usage:
+
+        .. code-block:: python
+            :caption: Replacement of a `User` resource
+
+            from scim2_models import User
+
+            user = scim.query(User, "my-used-id")
+            user.display_name = "Fancy New Name"
+            updated_user = scim.replace(user)
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_REPLACEMENT_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_REPLACEMENT_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
+        """
+        raise NotImplementedError()

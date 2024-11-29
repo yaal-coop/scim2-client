@@ -1,8 +1,9 @@
 # scim2-client
 
-A SCIM client Python library built upon [scim2-models](https://scim2-models.readthedocs.io) and [httpx](https://github.com/encode/httpx),
+A SCIM client Python library built upon [scim2-models](https://scim2-models.readthedocs.io) ,
 that pythonically build requests and parse responses,
 following the [RFC7643](https://datatracker.ietf.org/doc/html/rfc7643.html) and [RFC7644](https://datatracker.ietf.org/doc/html/rfc7644.html) specifications.
+You can use whatever request engine you prefer to perform network requests, but scim2-models comes with [httpx](https://github.com/encode/httpx) support.
 
 It aims to be used in SCIM client applications, or in unit tests for SCIM server applications.
 
@@ -16,7 +17,7 @@ It allows users and groups creations, modifications and deletions to be synchron
 ## Installation
 
 ```shell
-pip install scim2-client
+pip install scim2-client[httpx]
 ```
 
 ## Usage

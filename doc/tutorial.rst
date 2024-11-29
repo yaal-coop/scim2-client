@@ -90,6 +90,7 @@ scim2-client comes with a light abstraction layers that allows for different req
 Currently those engines are shipped:
 
 - :class:`~scim2_client.engines.httpx.SyncSCIMClient`: A synchronous engine using `httpx <https://github.com/encode/httpx>`_ to perform the HTTP requests.
+- :class:`~scim2_client.engines.httpx.AsyncSCIMClient`: An asynchronous engine using `httpx <https://github.com/encode/httpx>`_ to perform the HTTP requests. It has the very same API than its synchronous version, except it is asynchronous.
 - :class:`~scim2_client.engines.werkzeug.TestSCIMClient`: A test engine for development purposes.
   It takes a WSGI app and directly execute the server code instead of performing real HTTP requests.
   This is faster in unit test suites, and helpful to catch the server exceptions.
