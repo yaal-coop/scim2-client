@@ -1034,7 +1034,7 @@ dev = [
     { name = "pytest", specifier = ">=8.2.1" },
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
     { name = "pytest-coverage", specifier = ">=0.0" },
-    { name = "pytest-httpserver", specifier = ">=1.0.10" },
+    { name = "pytest-httpserver", specifier = ">=1.1.0" },
     { name = "scim2-server", marker = "python_full_version >= '3.10'", specifier = ">=0.1.2" },
     { name = "tox-uv", specifier = ">=1.16.0" },
     { name = "werkzeug", specifier = ">=3.1.3" },
