@@ -63,6 +63,9 @@ class TestSCIMClient(BaseSyncSCIMClient):
         assert response_user.user_name == "foo"
     """
 
+    # avoid making Pytest believe this is a test class
+    __test__ = False
+
     def __init__(self, app, *args, scim_prefix: str = "", **kwargs):
         super().__init__(*args, **kwargs)
         self.client = Client(app)

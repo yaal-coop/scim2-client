@@ -13,9 +13,6 @@ scim2_server = pytest.importorskip("scim2_server")
 from scim2_server.backend import InMemoryBackend  # noqa: E402
 from scim2_server.provider import SCIMProvider  # noqa: E402
 
-# Avoid pytest believing this is a test class
-TestSCIMClient.__test__ = False  # type: ignore
-
 
 @pytest.fixture
 def scim_provider():
