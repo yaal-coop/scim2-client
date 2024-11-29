@@ -1,4 +1,5 @@
 import sys
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Optional
 from typing import Union
@@ -144,7 +145,7 @@ class BaseSCIMClient:
 
     def __init__(
         self,
-        resource_models: Optional[tuple[type[Resource]]] = None,
+        resource_models: Optional[Collection[type[Resource]]] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
