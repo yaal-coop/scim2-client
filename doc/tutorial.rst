@@ -17,15 +17,15 @@ In addition to your SCIM server root endpoint, you will probably want to provide
     from scim2_client.engines.httpx import SyncSCIMClient
 
     client = Client(base_url="https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-    scim = SyncSCIMClient(client, resource_types=(User[EnterpriseUser], Group))
+    scim = SyncSCIMClient(client, resource_models=(User[EnterpriseUser], Group))
 
-You need to give to indicate to :class:`~scim2_client.SCIMClient` all the different :class:`~scim2_models.Resource` types that you will need to manipulate with the :code:`resource_types` parameter.
+You need to give to indicate to :class:`~scim2_client.BaseSCIMClient` all the different :class:`~scim2_models.Resource` types that you will need to manipulate with the :code:`resource_models` parameter.
 This is needed so scim2-client will be able to guess which resource type to instante when an arbitrary payload is met.
 
 .. todo::
 
     We plan to implement the automatic discovery of SCIM server resources,
-    so they can dynamically be used without explicitly passing them with the :code:`resource_types` parameter.
+    so they can dynamically be used without explicitly passing them with the :code:`resource_models` parameter.
 
 Performing actions
 ==================
@@ -33,11 +33,11 @@ Performing actions
 scim2-client allows your application to interact with a SCIM server as described in :rfc:`RFC7644 §3 <7644#section-3>`, so you can read and manage the resources.
 The following actions are available:
 
-- :meth:`~scim2_client.BaseSCIMClient.create`
-- :meth:`~scim2_client.BaseSCIMClient.query`
-- :meth:`~scim2_client.BaseSCIMClient.replace`
-- :meth:`~scim2_client.BaseSCIMClient.delete`
-- :meth:`~scim2_client.BaseSCIMClient.search`
+- :meth:`~scim2_client.BaseSyncSCIMClient.create`
+- :meth:`~scim2_client.BaseSyncSCIMClient.query`
+- :meth:`~scim2_client.BaseSyncSCIMClient.replace`
+- :meth:`~scim2_client.BaseSyncSCIMClient.delete`
+- :meth:`~scim2_client.BaseSyncSCIMClient.search`
 
 Have a look at the :doc:`reference` to see usage examples and the exhaustive set of parameters, but generally it looks like this:
 
@@ -64,16 +64,16 @@ By default, the data passed to the :class:`SCIM client <scim2_client.BaseSCIMCli
 However sometimes you want to accept invalid inputs and outputs.
 To achieve this, all the methods provide the following parameters, all are :data:`True` by default:
 
-- :code:`check_request_payload`:
+- :paramref:`~scim2_client.BaseSCIMClient.check_request_payload`:
   If :data:`True` (the default) a :class:`~pydantic.ValidationError` will be raised if the input does not respect the SCIM standard.
   If :data:`False`, input is expected to be a :data:`dict` that will be passed as-is in the request.
-- :code:`check_response_payload`:
+- :paramref:`~scim2_client.BaseSCIMClient.check_response_payload`:
   If :data:`True` (the default) a :class:`~pydantic.ValidationError` will be raised if the server response does not respect the SCIM standard.
   If :data:`False` the server response is returned as-is.
 - :code:`expected_status_codes`: The list of expected status codes in the response.
   If :data:`None` any status code is accepted.
   If an unexpected status code is returned, a :class:`~scim2_client.errors.UnexpectedStatusCode` exception is raised.
-- :code:`raise_scim_errors`: If :data:`True` (the default) and the server returned an :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject` exception will be raised.
+- :paramref:`~scim2_client.BaseSCIMClient.raise_scim_errors`: If :data:`True` (the default) and the server returned an :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject` exception will be raised.
   If :data:`False` the error object is returned.
 
 
