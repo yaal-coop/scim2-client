@@ -48,6 +48,14 @@ class BaseSCIMClient:
 
     :param resource_models: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
         If a request payload describe a resource that is not in this list, an exception will be raised.
+    :param check_request_payload: If :data:`False`,
+        :code:`resource` is expected to be a dict that will be passed as-is in the request.
+        This value can be overwritten in methods.
+    :param check_response_payload: Whether to validate that the response payloads are valid.
+        If set, the raw payload will be returned. This value can be overwritten in methods.
+    :param raise_scim_errors: If :data:`True` and the server returned an
+        :class:`~scim2_models.Error` object during a request, a :class:`~scim2_client.SCIMResponseErrorObject`
+        exception will be raised. If :data:`False` the error object is returned. This value can be overwritten in methods.
 
     .. note::
 
@@ -134,10 +142,19 @@ class BaseSCIMClient:
     :rfc:`RFC7644 §3.12 <7644#section-3.12>`.
     """
 
-    def __init__(self, resource_models: Optional[tuple[type[Resource]]] = None):
+    def __init__(
+        self,
+        resource_models: Optional[tuple[type[Resource]]] = None,
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        raise_scim_errors: bool = True,
+    ):
         self.resource_models = tuple(
             set(resource_models or []) | {ResourceType, Schema, ServiceProviderConfig}
         )
+        self.check_request_payload = True
+        self.check_response_payload = True
+        self.raise_scim_errors = True
 
     def check_resource_model(
         self, resource_model: type[Resource], payload=None
@@ -169,10 +186,13 @@ class BaseSCIMClient:
         headers: dict,
         expected_status_codes: Optional[list[int]] = None,
         expected_types: Optional[list[type[Resource]]] = None,
-        check_response_payload: bool = True,
-        raise_scim_errors: bool = True,
+        check_response_payload: Optional[bool] = None,
+        raise_scim_errors: Optional[bool] = None,
         scim_ctx: Optional[Context] = None,
     ) -> Union[Error, None, dict, type[Resource]]:
+        if raise_scim_errors is None:
+            raise_scim_errors = self.raise_scim_errors
+
         if expected_status_codes and status_code not in expected_status_codes:
             raise UnexpectedStatusCode(status_code)
 
@@ -197,6 +217,9 @@ class BaseSCIMClient:
 
         else:
             response_payload = payload
+
+        if check_response_payload is None:
+            check_response_payload = self.check_response_payload
 
         if not check_response_payload:
             return response_payload
@@ -240,15 +263,17 @@ class BaseSCIMClient:
     def prepare_create_request(
         self,
         resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
         expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> RequestPayload:
         req = RequestPayload(
             expected_status_codes=expected_status_codes,
             request_kwargs=kwargs,
         )
+        if check_request_payload is None:
+            check_request_payload = self.check_request_payload
 
         if not check_request_payload:
             req.payload = resource
@@ -289,15 +314,18 @@ class BaseSCIMClient:
         resource_model: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
-        check_request_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
         expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> RequestPayload:
         req = RequestPayload(
             expected_status_codes=expected_status_codes,
             request_kwargs=kwargs,
         )
+
+        if check_request_payload is None:
+            check_request_payload = self.check_request_payload
 
         if resource_model and check_request_payload:
             self.check_resource_model(resource_model)
@@ -341,15 +369,18 @@ class BaseSCIMClient:
     def prepare_search_request(
         self,
         search_request: Optional[SearchRequest] = None,
-        check_request_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
         expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> RequestPayload:
         req = RequestPayload(
             expected_status_codes=expected_status_codes,
             request_kwargs=kwargs,
         )
+
+        if check_request_payload is None:
+            check_request_payload = self.check_request_payload
 
         if not check_request_payload:
             req.payload = search_request
@@ -372,7 +403,7 @@ class BaseSCIMClient:
         resource_model: type,
         id: str,
         expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> RequestPayload:
         req = RequestPayload(
@@ -388,15 +419,18 @@ class BaseSCIMClient:
     def prepare_replace_request(
         self,
         resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
         expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> RequestPayload:
         req = RequestPayload(
             expected_status_codes=expected_status_codes,
             request_kwargs=kwargs,
         )
+
+        if check_request_payload is None:
+            check_request_payload = self.check_request_payload
 
         if not check_request_payload:
             req.payload = resource
@@ -449,27 +483,23 @@ class BaseSyncSCIMClient(BaseSCIMClient):
     def create(
         self,
         resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.CREATION_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3 <7644#section-3.3>`.
 
         :param resource: The resource to create
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If :data:`False`,
-            :code:`resource` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request
             library.
 
@@ -501,12 +531,12 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         resource_model: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.QUERY_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644 §3.4.2 <7644#section-3.4.2>`.
@@ -517,15 +547,11 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         :param resource_model: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If :data:`False`,
-            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
@@ -577,12 +603,12 @@ class BaseSyncSCIMClient(BaseSCIMClient):
     def search(
         self,
         search_request: Optional[SearchRequest] = None,
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.SEARCH_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
         """Perform a POST search request to read all available resources, as defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
@@ -590,15 +616,11 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         :param resource_models: Resource type or union of types expected
             to be read from the response.
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If :data:`False`,
-            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -630,24 +652,21 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         self,
         resource_model: type,
         id: str,
-        check_response_payload: bool = True,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.DELETION_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6 <7644#section-3.6>`.
 
         :param resource_model: The type of the resource to delete.
         :param id: The type id the resource to delete.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -670,27 +689,23 @@ class BaseSyncSCIMClient(BaseSCIMClient):
     def replace(
         self,
         resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.REPLACEMENT_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
         """Perform a PUT request to replace a resource, as defined in :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
         :param resource: The new resource to replace.
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If :data:`False`,
-            :code:`resource` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -725,27 +740,23 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
     async def create(
         self,
         resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.CREATION_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
         """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3 <7644#section-3.3>`.
 
         :param resource: The resource to create
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If :data:`False`,
-            :code:`resource` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request
             library.
 
@@ -777,12 +788,12 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
         resource_model: Optional[type[Resource]] = None,
         id: Optional[str] = None,
         search_request: Optional[Union[SearchRequest, dict]] = None,
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.QUERY_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
         """Perform a GET request to read resources, as defined in :rfc:`RFC7644 §3.4.2 <7644#section-3.4.2>`.
@@ -793,15 +804,11 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
         :param resource_model: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If :data:`False`,
-            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
@@ -853,12 +860,12 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
     async def search(
         self,
         search_request: Optional[SearchRequest] = None,
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.SEARCH_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
         """Perform a POST search request to read all available resources, as defined in :rfc:`RFC7644 §3.4.3 <7644#section-3.4.3>`.
@@ -866,15 +873,11 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
         :param resource_models: Resource type or union of types expected
             to be read from the response.
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If :data:`False`,
-            :code:`search_request` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -906,24 +909,21 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
         self,
         resource_model: type,
         id: str,
-        check_response_payload: bool = True,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.DELETION_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
         """Perform a DELETE request to create, as defined in :rfc:`RFC7644 §3.6 <7644#section-3.6>`.
 
         :param resource_model: The type of the resource to delete.
         :param id: The type id the resource to delete.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -946,27 +946,23 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
     async def replace(
         self,
         resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
+        check_request_payload: Optional[bool] = None,
+        check_response_payload: Optional[bool] = None,
         expected_status_codes: Optional[
             list[int]
         ] = BaseSCIMClient.REPLACEMENT_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
+        raise_scim_errors: Optional[bool] = None,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
         """Perform a PUT request to replace a resource, as defined in :rfc:`RFC7644 §3.5.1 <7644#section-3.5.1>`.
 
         :param resource: The new resource to replace.
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If :data:`False`,
-            :code:`resource` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
+        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
+        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
