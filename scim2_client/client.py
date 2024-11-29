@@ -153,9 +153,9 @@ class BaseSCIMClient:
         self.resource_models = tuple(
             set(resource_models or []) | {ResourceType, Schema, ServiceProviderConfig}
         )
-        self.check_request_payload = True
-        self.check_response_payload = True
-        self.raise_scim_errors = True
+        self.check_request_payload = check_request_payload
+        self.check_response_payload = check_response_payload
+        self.raise_scim_errors = raise_scim_errors
 
     def check_resource_model(
         self, resource_model: type[Resource], payload=None
