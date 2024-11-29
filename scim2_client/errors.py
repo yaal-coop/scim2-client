@@ -69,12 +69,9 @@ class SCIMResponseErrorObject(SCIMResponseError):
     Those errors are only raised when the :code:`raise_scim_errors` parameter is :data:`True`.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, obj, *args, **kwargs):
         message = kwargs.pop(
-            "message",
-            f"The server returned a SCIM Error object: {kwargs['source'].detail}"
-            if kwargs.get("source")
-            else "The server returned a SCIM Error object",
+            "message", f"The server returned a SCIM Error object: {obj}"
         )
         super().__init__(message, *args, **kwargs)
 
@@ -82,12 +79,9 @@ class SCIMResponseErrorObject(SCIMResponseError):
 class UnexpectedStatusCode(SCIMResponseError):
     """Error raised when a server returned an unexpected status code for a given :class:`~scim2_models.Context`."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, status_code: int, *args, **kwargs):
         message = kwargs.pop(
-            "message",
-            f"Unexpected response status code: {kwargs['source'].status_code}"
-            if kwargs.get("source")
-            else "Unexpected response status code",
+            "message", f"Unexpected response status code: {status_code}"
         )
         super().__init__(message, *args, **kwargs)
 

@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[0.3.1] - 2024-11-29
+--------------------
+
+Fixed
+^^^^^
+- Some variables were missing from the SCIM exception classes.
+
 [0.3.0] - 2024-11-29
 --------------------
 

@@ -174,7 +174,7 @@ class BaseSCIMClient:
         scim_ctx: Optional[Context] = None,
     ) -> Union[Error, None, dict, type[Resource]]:
         if expected_status_codes and status_code not in expected_status_codes:
-            raise UnexpectedStatusCode()
+            raise UnexpectedStatusCode(status_code)
 
         # Interoperability considerations:  The "application/scim+json" media
         # type is intended to identify JSON structure data that conforms to
@@ -207,7 +207,7 @@ class BaseSCIMClient:
         ):
             error = Error.model_validate(response_payload)
             if raise_scim_errors:
-                raise SCIMResponseErrorObject(source=error)
+                raise SCIMResponseErrorObject(obj=error.detail, source=error)
             return error
 
         if not expected_types:
