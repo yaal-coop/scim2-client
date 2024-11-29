@@ -1021,7 +1021,7 @@ doc = [
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx", marker = "extra == 'httpx'", specifier = ">=0.24.0" },
+    { name = "httpx", marker = "extra == 'httpx'", specifier = ">=0.28.0" },
     { name = "scim2-models", specifier = ">=0.2.0" },
     { name = "werkzeug", marker = "extra == 'werkzeug'", specifier = ">=3.1.3" },
 ]

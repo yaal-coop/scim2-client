@@ -32,7 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 httpx = [
-    "httpx>=0.24.0",
+    "httpx>=0.28.0",
 ]
 
 werkzeug = [
