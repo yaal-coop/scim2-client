@@ -9,7 +9,7 @@ build:
   jobs:
     post_create_environment:
       - pip install uv
-      - uv export --group doc --no-hashes --output-file requirements.txt
+      - uv export --all-extras --group doc --no-hashes --output-file requirements.txt
     post_install:
       - pip install .
       - pip install --requirement requirements.txt
