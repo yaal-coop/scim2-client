@@ -1,6 +1,16 @@
 Changelog
 =========
 
+[0.3.2] - 2024-11-29
+--------------------
+
+Added
+^^^^^
+- Implement :class:`~scim2_client.BaseSCIMClient` :paramref:`~scim2_client.BaseSCIMClient.check_request_payload`,
+  :paramref:`~scim2_client.BaseSCIMClient.check_response_payload` and
+  :paramref:`~scim2_client.BaseSCIMClient.raise_scim_errors` paramibutes,
+  to keep the same values for all the requests.
+
 [0.3.1] - 2024-11-29
 --------------------
 

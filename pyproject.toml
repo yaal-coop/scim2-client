@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scim2-client"
-version = "0.3.1"
+version = "0.3.2"
 description = "Pythonically build SCIM requests and parse SCIM responses"
 authors = [{name="Yaal Coop", email="contact@yaal.coop"}]
 license = {file = "LICENSE.md"}
@@ -64,6 +64,7 @@ doc = [
     "shibuya>=2024.5.15",
     "sphinx-issues >= 5.0.0",
     "sphinx>=7.3.7",
+    "sphinx-paramlinks>=0.6.0",
 ]
 
 [tool.coverage.run]

@@ -495,11 +495,11 @@ class BaseSyncSCIMClient(BaseSCIMClient):
 
         :param resource: The resource to create
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request
             library.
 
@@ -547,11 +547,11 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         :param resource_model: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
@@ -616,11 +616,11 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         :param resource_models: Resource type or union of types expected
             to be read from the response.
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -663,10 +663,10 @@ class BaseSyncSCIMClient(BaseSCIMClient):
 
         :param resource_model: The type of the resource to delete.
         :param id: The type id the resource to delete.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -701,11 +701,11 @@ class BaseSyncSCIMClient(BaseSCIMClient):
 
         :param resource: The new resource to replace.
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -752,11 +752,11 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
 
         :param resource: The resource to create
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request
             library.
 
@@ -804,11 +804,11 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
         :param resource_model: A :class:`~scim2_models.Resource` subtype or :data:`None`
         :param id: The SCIM id of an object to get, or :data:`None`
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying HTTP request library.
 
         :return:
@@ -873,11 +873,11 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
         :param resource_models: Resource type or union of types expected
             to be read from the response.
         :param search_request: An object detailing the search query parameters.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -920,10 +920,10 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
 
         :param resource_model: The type of the resource to delete.
         :param id: The type id the resource to delete.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
@@ -958,11 +958,11 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
 
         :param resource: The new resource to replace.
             If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_request_payload`.
-        :param check_response_payload: If set, overwrites the :attr:`client value<BaseSCIMClient.check_response_payload`.
+        :param check_request_payload: If set, overwrites :paramref:`BaseSCIMClient.check_request_payload`.
+        :param check_response_payload: If set, overwrites :paramref:`BaseSCIMClient.check_response_payload`.
         :param expected_status_codes: The list of expected status codes form the response.
             If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If set, overwrites the :attr:`client value<BaseSCIMClient.raise_scim_errors`.
+        :param raise_scim_errors: If set, overwrites :paramref:`BaseSCIMClient.raise_scim_errors`.
         :param kwargs: Additional parameters passed to the underlying
             HTTP request library.
 
