@@ -1,3 +1,4 @@
+import json
 from contextlib import contextmanager
 from typing import Optional
 from typing import Union
@@ -13,12 +14,16 @@ from werkzeug.test import Client
 
 from scim2_client.client import BaseSyncSCIMClient
 from scim2_client.errors import SCIMClientError
+from scim2_client.errors import UnexpectedContentFormat
 
 
 @contextmanager
 def handle_response_error(response):
     try:
         yield
+
+    except json.decoder.JSONDecodeError as exc:
+        raise UnexpectedContentFormat(source=response) from exc
 
     except SCIMClientError as exc:
         exc.source = response

@@ -2,9 +2,12 @@ import pytest
 from scim2_models import ResourceType
 from scim2_models import SearchRequest
 from scim2_models import User
+from werkzeug.wrappers import Request
+from werkzeug.wrappers import Response
 
 from scim2_client.engines.werkzeug import TestSCIMClient
 from scim2_client.errors import SCIMResponseErrorObject
+from scim2_client.errors import UnexpectedContentFormat
 
 scim2_server = pytest.importorskip("scim2_server")
 from scim2_server.backend import InMemoryBackend  # noqa: E402
@@ -61,3 +64,15 @@ def test_werkzeug_engine(scim_client):
     scim_client.delete(User, response_user.id)
     with pytest.raises(SCIMResponseErrorObject):
         scim_client.query(User, response_user.id)
+
+
+def test_no_json():
+    """Test that pages that do not return JSON raise an UnexpectedContentFormat error."""
+
+    @Request.application
+    def application(request):
+        return Response("Hello, World!", content_type="application/scim+json")
+
+    client = TestSCIMClient(app=application, resource_models=(User,))
+    with pytest.raises(UnexpectedContentFormat):
+        client.query(url="/")

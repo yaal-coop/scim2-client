@@ -1,6 +1,14 @@
 Changelog
 =========
 
+[0.3.3] - Unreleased
+--------------------
+
+Added
+^^^^^
+- :class:`~scim2_client.engines.werkzeug.TestSCIMClient` raise a
+  :class:`~scim2_client.UnexpectedContentFormat` exception when response is not JSON.
+
 [0.3.2] - 2024-11-29
 --------------------
 
@@ -32,12 +40,12 @@ Fixed
 Added
 ^^^^^
 - The `Unknown resource type` request error keeps a reference to the faulty payload.
-- New `werkzeug` request engine for application development purpose.
-- New `AsyncSCIMClient` request engine. :issue:`1`
+- New :class:`~scim2_client.engines.werkzeug.TestSCIMClient` request engine for application development purpose.
+- New :class:`~scim2_client.engines.httpx.AsyncSCIMClient` request engine. :issue:`1`
 
 Changed
 ^^^^^^^
-- Separate httpx network code and SCIM code in separate file as a basis for async support (and maybe other request engines).
+- Separate httpx network code and SCIM code in separate file as a basis for async support (and other request engines).
 
 [0.2.2] - 2024-11-12
 --------------------
