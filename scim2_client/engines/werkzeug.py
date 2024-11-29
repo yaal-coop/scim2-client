@@ -11,7 +11,7 @@ from scim2_models import Resource
 from scim2_models import SearchRequest
 from werkzeug.test import Client
 
-from scim2_client.client import BaseSCIMClient
+from scim2_client.client import BaseSyncSCIMClient
 from scim2_client.errors import SCIMClientError
 
 
@@ -25,7 +25,7 @@ def handle_response_error(response):
         raise exc
 
 
-class TestSCIMClient(BaseSCIMClient):
+class TestSCIMClient(BaseSyncSCIMClient):
     """A client based on :class:`Werkzeug test Client <werkzeug.test.Client>` for application development purposes.
 
     This is helpful for developers of SCIM servers.
@@ -34,13 +34,15 @@ class TestSCIMClient(BaseSCIMClient):
 
     :param client: A WSGI application instance that will be used to send requests.
     :param scim_prefix: The scim root endpoint in the application.
-    :param resource_models: The client resource types.
+    :param resource_models: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
+        If a request payload describe a resource that is not in this list, an exception will be raised.
 
     .. code-block:: python
 
         from scim2_client.engines.werkzeug import TestSCIMClient
         from scim2_models import User, Group
 
+        scim_provider = myapp.create_app()
         testclient = TestSCIMClient(app=scim_provider, resource_models=(User, Group))
 
         request_user = User(user_name="foo", display_name="bar")
@@ -73,7 +75,7 @@ class TestSCIMClient(BaseSCIMClient):
         check_response_payload: bool = True,
         expected_status_codes: Optional[
             list[int]
-        ] = BaseSCIMClient.CREATION_RESPONSE_STATUS_CODES,
+        ] = BaseSyncSCIMClient.CREATION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
@@ -110,7 +112,7 @@ class TestSCIMClient(BaseSCIMClient):
         check_response_payload: bool = True,
         expected_status_codes: Optional[
             list[int]
-        ] = BaseSCIMClient.QUERY_RESPONSE_STATUS_CODES,
+        ] = BaseSyncSCIMClient.QUERY_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ):
@@ -148,7 +150,7 @@ class TestSCIMClient(BaseSCIMClient):
         check_response_payload: bool = True,
         expected_status_codes: Optional[
             list[int]
-        ] = BaseSCIMClient.SEARCH_RESPONSE_STATUS_CODES,
+        ] = BaseSyncSCIMClient.SEARCH_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
@@ -183,7 +185,7 @@ class TestSCIMClient(BaseSCIMClient):
         check_response_payload: bool = True,
         expected_status_codes: Optional[
             list[int]
-        ] = BaseSCIMClient.DELETION_RESPONSE_STATUS_CODES,
+        ] = BaseSyncSCIMClient.DELETION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
@@ -214,7 +216,7 @@ class TestSCIMClient(BaseSCIMClient):
         check_response_payload: bool = True,
         expected_status_codes: Optional[
             list[int]
-        ] = BaseSCIMClient.REPLACEMENT_RESPONSE_STATUS_CODES,
+        ] = BaseSyncSCIMClient.REPLACEMENT_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:

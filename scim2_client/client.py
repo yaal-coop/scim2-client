@@ -237,54 +237,6 @@ class BaseSCIMClient:
                 scim_exc.add_note(str(exc))
             raise scim_exc from exc
 
-    def create(
-        self,
-        resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
-        check_response_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = CREATION_RESPONSE_STATUS_CODES,
-        raise_scim_errors: bool = True,
-        **kwargs,
-    ) -> Union[AnyResource, Error, dict]:
-        """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3 <7644#section-3.3>`.
-
-        :param resource: The resource to create
-            If is a :data:`dict`, the resource type will be guessed from the schema.
-        :param check_request_payload: If :data:`False`,
-            :code:`resource` is expected to be a dict that will be passed as-is in the request.
-        :param check_response_payload: Whether to validate that the response payload is valid.
-            If set, the raw payload will be returned.
-        :param expected_status_codes: The list of expected status codes form the response.
-            If :data:`None` any status code is accepted.
-        :param raise_scim_errors: If :data:`True` and the server returned an
-            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
-            exception will be raised. If :data:`False` the error object is returned.
-        :param kwargs: Additional parameters passed to the underlying HTTP request
-            library.
-
-        :return:
-            - An :class:`~scim2_models.Error` object in case of error.
-            - The created object as returned by the server in case of success and :code:`check_response_payload` is :data:`True`.
-            - The created object payload as returned by the server in case of success and :code:`check_response_payload` is :data:`False`.
-
-        .. code-block:: python
-            :caption: Creation of a `User` resource
-
-            from scim2_models import User
-
-            request = User(user_name="bjensen@example.com")
-            response = scim.create(request)
-            # 'response' may be a User or an Error object
-
-        .. tip::
-
-            Check the :attr:`~scim2_models.Context.RESOURCE_CREATION_REQUEST`
-            and :attr:`~scim2_models.Context.RESOURCE_CREATION_RESPONSE` contexts to understand
-            which value will excluded from the request payload, and which values are expected in
-            the response payload.
-        """
-        raise NotImplementedError()
-
     def prepare_create_request(
         self,
         resource: Union[AnyResource, dict],
@@ -332,6 +284,218 @@ class BaseSCIMClient:
 
         return req
 
+    def prepare_query_request(
+        self,
+        resource_model: Optional[type[Resource]] = None,
+        id: Optional[str] = None,
+        search_request: Optional[Union[SearchRequest, dict]] = None,
+        check_request_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = None,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> RequestPayload:
+        req = RequestPayload(
+            expected_status_codes=expected_status_codes,
+            request_kwargs=kwargs,
+        )
+
+        if resource_model and check_request_payload:
+            self.check_resource_model(resource_model)
+
+        payload: Optional[SearchRequest]
+        if not check_request_payload:
+            payload = search_request
+
+        elif isinstance(search_request, SearchRequest):
+            payload = search_request.model_dump(
+                exclude_unset=True,
+                scim_ctx=Context.RESOURCE_QUERY_REQUEST,
+            )
+
+        else:
+            payload = None
+
+        req.payload = payload
+        req.url = req.request_kwargs.pop("url", self.resource_endpoint(resource_model))
+
+        if resource_model is None:
+            req.expected_types = [
+                *self.resource_models,
+                ListResponse[Union[self.resource_models]],
+            ]
+
+        elif resource_model == ServiceProviderConfig:
+            req.expected_types = [resource_model]
+            if id:
+                raise SCIMClientError("ServiceProviderConfig cannot have an id")
+
+        elif id:
+            req.expected_types = [resource_model]
+            req.url = f"{req.url}/{id}"
+
+        else:
+            req.expected_types = [ListResponse[resource_model]]
+
+        return req
+
+    def prepare_search_request(
+        self,
+        search_request: Optional[SearchRequest] = None,
+        check_request_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = None,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> RequestPayload:
+        req = RequestPayload(
+            expected_status_codes=expected_status_codes,
+            request_kwargs=kwargs,
+        )
+
+        if not check_request_payload:
+            req.payload = search_request
+
+        else:
+            req.payload = (
+                search_request.model_dump(
+                    exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_RESPONSE
+                )
+                if search_request
+                else None
+            )
+
+        req.url = req.request_kwargs.pop("url", "/.search")
+        req.expected_types = [ListResponse[Union[self.resource_models]]]
+        return req
+
+    def prepare_delete_request(
+        self,
+        resource_model: type,
+        id: str,
+        expected_status_codes: Optional[list[int]] = None,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> RequestPayload:
+        req = RequestPayload(
+            expected_status_codes=expected_status_codes,
+            request_kwargs=kwargs,
+        )
+
+        self.check_resource_model(resource_model)
+        delete_url = self.resource_endpoint(resource_model) + f"/{id}"
+        req.url = req.request_kwargs.pop("url", delete_url)
+        return req
+
+    def prepare_replace_request(
+        self,
+        resource: Union[AnyResource, dict],
+        check_request_payload: bool = True,
+        expected_status_codes: Optional[list[int]] = None,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> RequestPayload:
+        req = RequestPayload(
+            expected_status_codes=expected_status_codes,
+            request_kwargs=kwargs,
+        )
+
+        if not check_request_payload:
+            req.payload = resource
+            req.url = kwargs.pop("url", None)
+
+        else:
+            if isinstance(resource, Resource):
+                resource_model = resource.__class__
+
+            else:
+                resource_model = Resource.get_by_payload(self.resource_models, resource)
+                if not resource_model:
+                    raise SCIMRequestError(
+                        "Cannot guess resource type from the payload",
+                        source=resource,
+                    )
+
+                try:
+                    resource = resource_model.model_validate(resource)
+                except ValidationError as exc:
+                    scim_validation_exc = RequestPayloadValidationError(source=resource)
+                    if sys.version_info >= (3, 11):  # pragma: no cover
+                        scim_validation_exc.add_note(str(exc))
+                    raise scim_validation_exc from exc
+
+            self.check_resource_model(resource_model, resource)
+
+            if not resource.id:
+                raise SCIMRequestError("Resource must have an id", source=resource)
+
+            req.expected_types = [resource.__class__]
+            req.payload = resource.model_dump(
+                scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST
+            )
+            req.url = req.request_kwargs.pop(
+                "url", self.resource_endpoint(resource.__class__) + f"/{resource.id}"
+            )
+
+        return req
+
+    def modify(
+        self, resource: Union[AnyResource, dict], op: PatchOp, **kwargs
+    ) -> Optional[Union[AnyResource, dict]]:
+        raise NotImplementedError()
+
+
+class BaseSyncSCIMClient(BaseSCIMClient):
+    """Base class for synchronous request clients."""
+
+    def create(
+        self,
+        resource: Union[AnyResource, dict],
+        check_request_payload: bool = True,
+        check_response_payload: bool = True,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.CREATION_RESPONSE_STATUS_CODES,
+        raise_scim_errors: bool = True,
+        **kwargs,
+    ) -> Union[AnyResource, Error, dict]:
+        """Perform a POST request to create, as defined in :rfc:`RFC7644 §3.3 <7644#section-3.3>`.
+
+        :param resource: The resource to create
+            If is a :data:`dict`, the resource type will be guessed from the schema.
+        :param check_request_payload: If :data:`False`,
+            :code:`resource` is expected to be a dict that will be passed as-is in the request.
+        :param check_response_payload: Whether to validate that the response payload is valid.
+            If set, the raw payload will be returned.
+        :param expected_status_codes: The list of expected status codes form the response.
+            If :data:`None` any status code is accepted.
+        :param raise_scim_errors: If :data:`True` and the server returned an
+            :class:`~scim2_models.Error` object, a :class:`~scim2_client.SCIMResponseErrorObject`
+            exception will be raised. If :data:`False` the error object is returned.
+        :param kwargs: Additional parameters passed to the underlying HTTP request
+            library.
+
+        :return:
+            - An :class:`~scim2_models.Error` object in case of error.
+            - The created object as returned by the server in case of success and :code:`check_response_payload` is :data:`True`.
+            - The created object payload as returned by the server in case of success and :code:`check_response_payload` is :data:`False`.
+
+        .. code-block:: python
+            :caption: Creation of a `User` resource
+
+            from scim2_models import User
+
+            request = User(user_name="bjensen@example.com")
+            response = scim.create(request)
+            # 'response' may be a User or an Error object
+
+        .. tip::
+
+            Check the :attr:`~scim2_models.Context.RESOURCE_CREATION_REQUEST`
+            and :attr:`~scim2_models.Context.RESOURCE_CREATION_RESPONSE` contexts to understand
+            which value will excluded from the request payload, and which values are expected in
+            the response payload.
+        """
+        raise NotImplementedError()
+
     def query(
         self,
         resource_model: Optional[type[Resource]] = None,
@@ -339,7 +503,9 @@ class BaseSCIMClient:
         search_request: Optional[Union[SearchRequest, dict]] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = QUERY_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.QUERY_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
@@ -408,66 +574,14 @@ class BaseSCIMClient:
         """
         raise NotImplementedError()
 
-    def prepare_query_request(
-        self,
-        resource_model: Optional[type[Resource]] = None,
-        id: Optional[str] = None,
-        search_request: Optional[Union[SearchRequest, dict]] = None,
-        check_request_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
-        **kwargs,
-    ) -> RequestPayload:
-        req = RequestPayload(
-            expected_status_codes=expected_status_codes,
-            request_kwargs=kwargs,
-        )
-
-        if resource_model and check_request_payload:
-            self.check_resource_model(resource_model)
-
-        payload: Optional[SearchRequest]
-        if not check_request_payload:
-            payload = search_request
-
-        elif isinstance(search_request, SearchRequest):
-            payload = search_request.model_dump(
-                exclude_unset=True,
-                scim_ctx=Context.RESOURCE_QUERY_REQUEST,
-            )
-
-        else:
-            payload = None
-
-        req.payload = payload
-        req.url = req.request_kwargs.pop("url", self.resource_endpoint(resource_model))
-
-        if resource_model is None:
-            req.expected_types = [
-                *self.resource_models,
-                ListResponse[Union[self.resource_models]],
-            ]
-
-        elif resource_model == ServiceProviderConfig:
-            req.expected_types = [resource_model]
-            if id:
-                raise SCIMClientError("ServiceProviderConfig cannot have an id")
-
-        elif id:
-            req.expected_types = [resource_model]
-            req.url = f"{req.url}/{id}"
-
-        else:
-            req.expected_types = [ListResponse[resource_model]]
-
-        return req
-
     def search(
         self,
         search_request: Optional[SearchRequest] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = SEARCH_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.SEARCH_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
@@ -512,41 +626,14 @@ class BaseSCIMClient:
         """
         raise NotImplementedError()
 
-    def prepare_search_request(
-        self,
-        search_request: Optional[SearchRequest] = None,
-        check_request_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
-        **kwargs,
-    ) -> RequestPayload:
-        req = RequestPayload(
-            expected_status_codes=expected_status_codes,
-            request_kwargs=kwargs,
-        )
-
-        if not check_request_payload:
-            req.payload = search_request
-
-        else:
-            req.payload = (
-                search_request.model_dump(
-                    exclude_unset=True, scim_ctx=Context.RESOURCE_QUERY_RESPONSE
-                )
-                if search_request
-                else None
-            )
-
-        req.url = req.request_kwargs.pop("url", "/.search")
-        req.expected_types = [ListResponse[Union[self.resource_models]]]
-        return req
-
     def delete(
         self,
         resource_model: type,
         id: str,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = DELETION_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.DELETION_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
@@ -580,30 +667,14 @@ class BaseSCIMClient:
         """
         raise NotImplementedError()
 
-    def prepare_delete_request(
-        self,
-        resource_model: type,
-        id: str,
-        expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
-        **kwargs,
-    ) -> RequestPayload:
-        req = RequestPayload(
-            expected_status_codes=expected_status_codes,
-            request_kwargs=kwargs,
-        )
-
-        self.check_resource_model(resource_model)
-        delete_url = self.resource_endpoint(resource_model) + f"/{id}"
-        req.url = req.request_kwargs.pop("url", delete_url)
-        return req
-
     def replace(
         self,
         resource: Union[AnyResource, dict],
         check_request_payload: bool = True,
         check_response_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = REPLACEMENT_RESPONSE_STATUS_CODES,
+        expected_status_codes: Optional[
+            list[int]
+        ] = BaseSCIMClient.REPLACEMENT_RESPONSE_STATUS_CODES,
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
@@ -645,61 +716,4 @@ class BaseSCIMClient:
             which value will excluded from the request payload, and which values are expected in
             the response payload.
         """
-        raise NotImplementedError()
-
-    def prepare_replace_request(
-        self,
-        resource: Union[AnyResource, dict],
-        check_request_payload: bool = True,
-        expected_status_codes: Optional[list[int]] = None,
-        raise_scim_errors: bool = True,
-        **kwargs,
-    ) -> RequestPayload:
-        req = RequestPayload(
-            expected_status_codes=expected_status_codes,
-            request_kwargs=kwargs,
-        )
-
-        if not check_request_payload:
-            req.payload = resource
-            req.url = kwargs.pop("url", None)
-
-        else:
-            if isinstance(resource, Resource):
-                resource_model = resource.__class__
-
-            else:
-                resource_model = Resource.get_by_payload(self.resource_models, resource)
-                if not resource_model:
-                    raise SCIMRequestError(
-                        "Cannot guess resource type from the payload",
-                        source=resource,
-                    )
-
-                try:
-                    resource = resource_model.model_validate(resource)
-                except ValidationError as exc:
-                    scim_validation_exc = RequestPayloadValidationError(source=resource)
-                    if sys.version_info >= (3, 11):  # pragma: no cover
-                        scim_validation_exc.add_note(str(exc))
-                    raise scim_validation_exc from exc
-
-            self.check_resource_model(resource_model, resource)
-
-            if not resource.id:
-                raise SCIMRequestError("Resource must have an id", source=resource)
-
-            req.expected_types = [resource.__class__]
-            req.payload = resource.model_dump(
-                scim_ctx=Context.RESOURCE_REPLACEMENT_REQUEST
-            )
-            req.url = req.request_kwargs.pop(
-                "url", self.resource_endpoint(resource.__class__) + f"/{resource.id}"
-            )
-
-        return req
-
-    def modify(
-        self, resource: Union[AnyResource, dict], op: PatchOp, **kwargs
-    ) -> Optional[Union[AnyResource, dict]]:
         raise NotImplementedError()
