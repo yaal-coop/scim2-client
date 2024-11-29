@@ -58,13 +58,13 @@ class TestSCIMClient(BaseSCIMClient):
         self.client = Client(app)
         self.scim_prefix = scim_prefix
 
-    def make_url(self, url: str) -> str:
+    def make_url(self, url: Optional[str]) -> str:
         prefix = (
             self.scim_prefix[:-1]
             if self.scim_prefix.endswith("/")
             else self.scim_prefix
         )
-        return f"{prefix}{url}"
+        return f"{prefix}{url or ''}"
 
     def create(
         self,
@@ -77,24 +77,25 @@ class TestSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
-        url, payload, expected_types, request_kwargs = self.prepare_create_request(
+        req = self.prepare_create_request(
             resource=resource,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        response = self.client.post(self.make_url(url), json=payload, **request_kwargs)
+        response = self.client.post(
+            self.make_url(req.url), json=req.payload, **req.request_kwargs
+        )
 
-        with handle_response_error(payload):
+        with handle_response_error(req.payload):
             return self.check_response(
                 payload=response.json if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
@@ -113,29 +114,28 @@ class TestSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ):
-        url, payload, expected_types, request_kwargs = self.prepare_query_request(
+        req = self.prepare_query_request(
             resource_model=resource_model,
             id=id,
             search_request=search_request,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        query_string = urlencode(payload, doseq=False) if payload else None
+        query_string = urlencode(req.payload, doseq=False) if req.payload else None
         response = self.client.get(
-            self.make_url(url), query_string=query_string, **request_kwargs
+            self.make_url(req.url), query_string=query_string, **req.request_kwargs
         )
 
-        with handle_response_error(payload):
+        with handle_response_error(req.payload):
             return self.check_response(
                 payload=response.json if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
@@ -152,24 +152,25 @@ class TestSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
-        url, payload, expected_types, request_kwargs = self.prepare_search_request(
+        req = self.prepare_search_request(
             search_request=search_request,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        response = self.client.post(self.make_url(url), json=payload, **request_kwargs)
+        response = self.client.post(
+            self.make_url(req.url), json=req.payload, **req.request_kwargs
+        )
 
         with handle_response_error(response):
             return self.check_response(
                 payload=response.json if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
@@ -186,23 +187,22 @@ class TestSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
-        url, request_kwargs = self.prepare_delete_request(
+        req = self.prepare_delete_request(
             resource_model=resource_model,
             id=id,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        response = self.client.delete(self.make_url(url), **request_kwargs)
+        response = self.client.delete(self.make_url(req.url), **req.request_kwargs)
 
         with handle_response_error(response):
             return self.check_response(
                 payload=response.json if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
+                expected_status_codes=req.expected_status_codes,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
             )
@@ -218,24 +218,25 @@ class TestSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
-        url, payload, expected_types, request_kwargs = self.prepare_replace_request(
+        req = self.prepare_replace_request(
             resource=resource,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        response = self.client.put(self.make_url(url), json=payload, **request_kwargs)
+        response = self.client.put(
+            self.make_url(req.url), json=req.payload, **req.request_kwargs
+        )
 
         with handle_response_error(response):
             return self.check_response(
                 payload=response.json if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,

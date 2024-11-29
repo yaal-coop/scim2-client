@@ -68,25 +68,24 @@ class SyncSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
-        url, payload, expected_types, request_kwargs = self.prepare_create_request(
+        req = self.prepare_create_request(
             resource=resource,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        with handle_request_error(payload):
-            response = self.client.post(url, json=payload, **request_kwargs)
+        with handle_request_error(req.payload):
+            response = self.client.post(req.url, json=req.payload, **req.request_kwargs)
 
-        with handle_response_error(payload):
+        with handle_response_error(req.payload):
             return self.check_response(
                 payload=response.json() if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_CREATION_RESPONSE,
@@ -105,27 +104,28 @@ class SyncSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ):
-        url, payload, expected_types, request_kwargs = self.prepare_query_request(
+        req = self.prepare_query_request(
             resource_model=resource_model,
             id=id,
             search_request=search_request,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        with handle_request_error(payload):
-            response = self.client.get(url, params=payload, **request_kwargs)
+        with handle_request_error(req.payload):
+            response = self.client.get(
+                req.url, params=req.payload, **req.request_kwargs
+            )
 
-        with handle_response_error(payload):
+        with handle_response_error(req.payload):
             return self.check_response(
                 payload=response.json() if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
@@ -142,25 +142,24 @@ class SyncSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, ListResponse[AnyResource], Error, dict]:
-        url, payload, expected_types, request_kwargs = self.prepare_search_request(
+        req = self.prepare_search_request(
             search_request=search_request,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        with handle_request_error(payload):
-            response = self.client.post(url, json=payload, **request_kwargs)
+        with handle_request_error(req.payload):
+            response = self.client.post(req.url, json=req.payload, **req.request_kwargs)
 
         with handle_response_error(response):
             return self.check_response(
                 payload=response.json() if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_QUERY_RESPONSE,
@@ -177,17 +176,16 @@ class SyncSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Optional[Union[Error, dict]]:
-        url, request_kwargs = self.prepare_delete_request(
+        req = self.prepare_delete_request(
             resource_model=resource_model,
             id=id,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
         with handle_request_error():
-            response = self.client.delete(url, **request_kwargs)
+            response = self.client.delete(req.url, **req.request_kwargs)
 
         with handle_response_error(response):
             return self.check_response(
@@ -210,25 +208,24 @@ class SyncSCIMClient(BaseSCIMClient):
         raise_scim_errors: bool = True,
         **kwargs,
     ) -> Union[AnyResource, Error, dict]:
-        url, payload, expected_types, request_kwargs = self.prepare_replace_request(
+        req = self.prepare_replace_request(
             resource=resource,
             check_request_payload=check_request_payload,
-            check_response_payload=check_response_payload,
             expected_status_codes=expected_status_codes,
             raise_scim_errors=raise_scim_errors,
             **kwargs,
         )
 
-        with handle_request_error(payload):
-            response = self.client.put(url, json=payload, **request_kwargs)
+        with handle_request_error(req.payload):
+            response = self.client.put(req.url, json=req.payload, **req.request_kwargs)
 
         with handle_response_error(response):
             return self.check_response(
                 payload=response.json() if response.text else None,
                 status_code=response.status_code,
                 headers=response.headers,
-                expected_status_codes=expected_status_codes,
-                expected_types=expected_types,
+                expected_status_codes=req.expected_status_codes,
+                expected_types=req.expected_types,
                 check_response_payload=check_response_payload,
                 raise_scim_errors=raise_scim_errors,
                 scim_ctx=Context.RESOURCE_REPLACEMENT_RESPONSE,
