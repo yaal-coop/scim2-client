@@ -170,6 +170,11 @@ class BaseSCIMClient:
             )
 
     def resource_endpoint(self, resource_model: Optional[type[Resource]]) -> str:
+        """Find the :attr:`~scim2_models.ResourceType.endpoint` associated with a given :class:`~scim2_models.Resource`.
+
+        Internally, it looks if any :paramref:`resource_type <scim2_client.BaseSCIMClient.resource_models>`
+        of the client matches the resource_model by comparing schemas.
+        """
         if resource_model is None:
             return "/"
 
