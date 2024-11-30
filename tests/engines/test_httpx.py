@@ -5,9 +5,7 @@ import portpicker
 import pytest
 from httpx import AsyncClient
 from httpx import Client
-from scim2_models import ResourceType
 from scim2_models import SearchRequest
-from scim2_models import User
 
 from scim2_client.engines.httpx import AsyncSCIMClient
 from scim2_client.engines.httpx import SyncSCIMClient
@@ -16,14 +14,18 @@ from scim2_client.errors import SCIMResponseErrorObject
 scim2_server = pytest.importorskip("scim2_server")
 from scim2_server.backend import InMemoryBackend  # noqa: E402
 from scim2_server.provider import SCIMProvider  # noqa: E402
+from scim2_server.utils import load_default_resource_types  # noqa: E402
+from scim2_server.utils import load_default_schemas  # noqa: E402
 
 
 @pytest.fixture(scope="session")
 def server():
     backend = InMemoryBackend()
     provider = SCIMProvider(backend)
-    provider.register_schema(User.to_schema())
-    provider.register_resource_type(ResourceType.from_resource(User))
+    for schema in load_default_schemas().values():
+        provider.register_schema(schema)
+    for resource_type in load_default_resource_types().values():
+        provider.register_resource_type(resource_type)
     host = "localhost"
     port = portpicker.pick_unused_port()
     httpd = wsgiref.simple_server.make_server(host, port, provider)
@@ -40,11 +42,9 @@ def server():
 def test_sync_engine(server):
     host, port = server
     client = Client(base_url=f"http://{host}:{port}")
-    scim_client = SyncSCIMClient(
-        client,
-        resource_models=[User],
-        resource_types=[ResourceType.from_resource(User)],
-    )
+    scim_client = SyncSCIMClient(client)
+    scim_client.discover()
+    User = scim_client.get_resource_model("User")
 
     request_user = User(user_name="foo", display_name="bar")
     response_user = scim_client.create(request_user)
@@ -77,11 +77,9 @@ def test_sync_engine(server):
 async def test_async_engine(server):
     host, port = server
     client = AsyncClient(base_url=f"http://{host}:{port}")
-    scim_client = AsyncSCIMClient(
-        client,
-        resource_models=(User,),
-        resource_types=[ResourceType.from_resource(User)],
-    )
+    scim_client = AsyncSCIMClient(client)
+    await scim_client.discover()
+    User = scim_client.get_resource_model("User")
 
     request_user = User(user_name="foo", display_name="bar")
     response_user = await scim_client.create(request_user)

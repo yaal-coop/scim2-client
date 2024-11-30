@@ -1,5 +1,4 @@
 import pytest
-from scim2_models import ResourceType
 from scim2_models import SearchRequest
 from scim2_models import User
 from werkzeug.wrappers import Request
@@ -12,26 +11,29 @@ from scim2_client.errors import UnexpectedContentFormat
 scim2_server = pytest.importorskip("scim2_server")
 from scim2_server.backend import InMemoryBackend  # noqa: E402
 from scim2_server.provider import SCIMProvider  # noqa: E402
+from scim2_server.utils import load_default_resource_types  # noqa: E402
+from scim2_server.utils import load_default_schemas  # noqa: E402
 
 
 @pytest.fixture
 def scim_provider():
     provider = SCIMProvider(InMemoryBackend())
-    provider.register_schema(User.to_schema())
-    provider.register_resource_type(ResourceType.from_resource(User))
+    for schema in load_default_schemas().values():
+        provider.register_schema(schema)
+    for resource_type in load_default_resource_types().values():
+        provider.register_resource_type(resource_type)
     return provider
 
 
 @pytest.fixture
 def scim_client(scim_provider):
-    return TestSCIMClient(
-        app=scim_provider,
-        resource_models=(User,),
-        resource_types=[ResourceType.from_resource(User)],
-    )
+    client = TestSCIMClient(app=scim_provider)
+    client.discover()
+    return client
 
 
 def test_werkzeug_engine(scim_client):
+    User = scim_client.get_resource_model("User")
     request_user = User(user_name="foo", display_name="bar")
     response_user = scim_client.create(request_user)
     assert response_user.user_name == "foo"

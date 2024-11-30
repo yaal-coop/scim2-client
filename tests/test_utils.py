@@ -34,3 +34,16 @@ def test_guess_resource_endpoint():
 
     with pytest.raises(SCIMRequestError):
         client.resource_endpoint(Foobar)
+
+
+def test_get_resource_model():
+    client = SyncSCIMClient(
+        None,
+        resource_models=[User[EnterpriseUser]],
+    )
+    assert client.get_resource_model("User") == User[EnterpriseUser]
+    assert (
+        client.get_resource_model("urn:ietf:params:scim:schemas:core:2.0:User")
+        == User[EnterpriseUser]
+    )
+    assert client.get_resource_model("Group") is None

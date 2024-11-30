@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from collections.abc import Collection
 from dataclasses import dataclass
@@ -29,6 +30,7 @@ BASE_HEADERS = {
     "Accept": "application/scim+json",
     "Content-Type": "application/scim+json",
 }
+CONFIG_RESOURCES = (ResourceType, Schema, ServiceProviderConfig)
 
 
 @dataclass
@@ -153,18 +155,27 @@ class BaseSCIMClient:
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
     ):
-        self.resource_models = tuple(
-            set(resource_models or []) | {ResourceType, Schema, ServiceProviderConfig}
-        )
+        self.resource_models = tuple(set(resource_models or []) | set(CONFIG_RESOURCES))
         self.resource_types = resource_types
         self.check_request_payload = check_request_payload
         self.check_response_payload = check_response_payload
         self.raise_scim_errors = raise_scim_errors
 
+    def get_resource_model(self, name: str) -> Optional[type[Resource]]:
+        """Get a registered model by its name or its schema."""
+        for resource_model in self.resource_models:
+            schema = resource_model.model_fields["schemas"].default[0]
+            if schema == name or schema.split(":")[-1] == name:
+                return resource_model
+        return None
+
     def check_resource_model(
         self, resource_model: type[Resource], payload=None
     ) -> None:
-        if resource_model not in self.resource_models:
+        if (
+            resource_model not in self.resource_models
+            and resource_model not in CONFIG_RESOURCES
+        ):
             raise SCIMRequestError(
                 f"Unknown resource type: '{resource_model}'", source=payload
             )
@@ -202,7 +213,7 @@ class BaseSCIMClient:
         self.resource_types = [
             ResourceType.from_resource(model)
             for model in self.resource_models
-            if model not in (ResourceType, Schema, ServiceProviderConfig)
+            if model not in CONFIG_RESOURCES
         ]
 
     def check_response(
@@ -759,6 +770,31 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         """
         raise NotImplementedError()
 
+    def discover(self):
+        """Dynamically discover the server models :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType`.
+
+        This is a shortcut for :meth:`BaseSyncSCIMClient.discover_models`
+        and :meth:`BaseSyncSCIMClient.discover_resource_types`.
+        """
+        self.discover_models()
+        self.discover_resource_types()
+
+    def discover_models(self):
+        """Dynamically register resource models by reading the server :class:`~scim2_models.Schema` endpoint.
+
+        Internally it performs a request to the SCIM server to get all the schemas,
+        generate classes from those schemas, and register them in the client.
+        """
+        schemas = self.query(Schema)
+        self.resource_models = tuple(
+            Resource.from_schema(schema) for schema in schemas.resources
+        )
+
+    def discover_resource_types(self):
+        """Dynamically register resource types by reading the server :class:`~scim2_models.ResourceType` endpoint."""
+        schemas = self.query(ResourceType)
+        self.resource_types = schemas.resources
+
 
 class BaseAsyncSCIMClient(BaseSCIMClient):
     """Base class for asynchronous request clients."""
@@ -1015,3 +1051,30 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
             the response payload.
         """
         raise NotImplementedError()
+
+    async def discover(self):
+        """Dynamically discover the server models :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType`.
+
+        This is a shortcut for the parallel execution of :meth:`BaseAsyncSCIMClient.discover_models`
+        and :meth:`BaseAsyncSCIMClient.discover_resource_types`.
+        """
+        models_task = asyncio.create_task(self.discover_models())
+        resources_task = asyncio.create_task(self.discover_resource_types())
+        await models_task
+        await resources_task
+
+    async def discover_models(self):
+        """Dynamically register resource models by reading the server :class:`~scim2_models.Schema` endpoint.
+
+        Internally it performs a request to the SCIM server to get all the schemas,
+        generate classes from those schemas, and register them in the client.
+        """
+        schemas = await self.query(Schema)
+        self.resource_models = tuple(
+            Resource.from_schema(schema) for schema in schemas.resources
+        )
+
+    async def discover_resource_types(self):
+        """Dynamically register resource types by reading the server :class:`~scim2_models.ResourceType` endpoint."""
+        schemas = await self.query(ResourceType)
+        self.resource_types = schemas.resources

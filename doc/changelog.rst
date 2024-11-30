@@ -13,6 +13,7 @@ Changelog
 Added
 ^^^^^
 - Implement :meth:`~scim2_client.BaseSCIMClient.register_naive_resource_types`.
+- Implement :meth:`~scim2_client.BaseSyncSCIMClient.discover` methods.
 
 [0.3.3] - 2024-11-29
 --------------------
