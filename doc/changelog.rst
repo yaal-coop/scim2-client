@@ -1,6 +1,15 @@
 Changelog
 =========
 
+[0.4.0] - Unreleased
+--------------------
+
+.. warning::
+
+    This version comes with breaking changes:
+
+    - :class:`~scim2_client.BaseSCIMClient` takes a mandatory :paramref:`~scim2_client.BaseSCIMClient.resource_types` parameter.
+
 [0.3.3] - 2024-11-29
 --------------------
 

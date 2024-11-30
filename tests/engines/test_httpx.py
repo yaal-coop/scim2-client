@@ -23,15 +23,7 @@ def server():
     backend = InMemoryBackend()
     provider = SCIMProvider(backend)
     provider.register_schema(User.to_schema())
-    provider.register_resource_type(
-        ResourceType(
-            id="User",
-            name="User",
-            endpoint="/Users",
-            schema="urn:ietf:params:scim:schemas:core:2.0:User",
-        )
-    )
-
+    provider.register_resource_type(ResourceType.from_resource(User))
     host = "localhost"
     port = portpicker.pick_unused_port()
     httpd = wsgiref.simple_server.make_server(host, port, provider)
@@ -48,7 +40,11 @@ def server():
 def test_sync_engine(server):
     host, port = server
     client = Client(base_url=f"http://{host}:{port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
+    scim_client = SyncSCIMClient(
+        client,
+        resource_models=[User],
+        resource_types=[ResourceType.from_resource(User)],
+    )
 
     request_user = User(user_name="foo", display_name="bar")
     response_user = scim_client.create(request_user)
@@ -81,7 +77,11 @@ def test_sync_engine(server):
 async def test_async_engine(server):
     host, port = server
     client = AsyncClient(base_url=f"http://{host}:{port}")
-    scim_client = AsyncSCIMClient(client, resource_models=(User,))
+    scim_client = AsyncSCIMClient(
+        client,
+        resource_models=(User,),
+        resource_types=[ResourceType.from_resource(User)],
+    )
 
     request_user = User(user_name="foo", display_name="bar")
     response_user = await scim_client.create(request_user)

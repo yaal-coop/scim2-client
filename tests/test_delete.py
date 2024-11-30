@@ -1,28 +1,24 @@
 import pytest
-from httpx import Client
 from scim2_models import Error
 from scim2_models import Group
 from scim2_models import User
 
 from scim2_client import RequestNetworkError
 from scim2_client import SCIMRequestError
-from scim2_client.engines.httpx import SyncSCIMClient
 
 
-def test_delete_user(httpserver):
+def test_delete_user(httpserver, sync_client):
     """Nominal case for a User deletion."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="DELETE"
     ).respond_with_data(status=204, content_type="application/scim+json")
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.delete(User, "2819c223-7f76-453a-919d-413861904646")
+    response = sync_client.delete(User, "2819c223-7f76-453a-919d-413861904646")
     assert response is None
 
 
 @pytest.mark.parametrize("code", [400, 401, 403, 404, 412, 500, 501])
-def test_errors(httpserver, code):
+def test_errors(httpserver, code, sync_client):
     """Test error cases defined in RFC7644."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="DELETE"
@@ -35,9 +31,7 @@ def test_errors(httpserver, code):
         status=code,
     )
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.delete(
+    response = sync_client.delete(
         User, "2819c223-7f76-453a-919d-413861904646", raise_scim_errors=False
     )
 
@@ -48,15 +42,13 @@ def test_errors(httpserver, code):
     )
 
 
-def test_invalid_resource_model(httpserver):
+def test_invalid_resource_model(httpserver, sync_client):
     """Test that resource_models passed to the method must be part of BaseSCIMClient.resource_models."""
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
-        scim_client.delete(Group(display_name="foobar"), id="foobar")
+        sync_client.delete(Group(display_name="foobar"), id="foobar")
 
 
-def test_dont_check_response_payload(httpserver):
+def test_dont_check_response_payload(httpserver, sync_client):
     """Test the check_response_payload attribute."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="DELETE"
@@ -69,9 +61,7 @@ def test_dont_check_response_payload(httpserver):
         status=404,
     )
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.delete(
+    response = sync_client.delete(
         User, "2819c223-7f76-453a-919d-413861904646", check_response_payload=False
     )
     assert response == {
@@ -81,11 +71,9 @@ def test_dont_check_response_payload(httpserver):
     }
 
 
-def test_request_network_error(httpserver):
+def test_request_network_error(httpserver, sync_client):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(
         RequestNetworkError, match="Network error happened during request"
     ):
-        scim_client.delete(User, "anything", url="http://invalid.test")
+        sync_client.delete(User, "anything", url="http://invalid.test")

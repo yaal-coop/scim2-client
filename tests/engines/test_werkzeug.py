@@ -18,20 +18,17 @@ from scim2_server.provider import SCIMProvider  # noqa: E402
 def scim_provider():
     provider = SCIMProvider(InMemoryBackend())
     provider.register_schema(User.to_schema())
-    provider.register_resource_type(
-        ResourceType(
-            id="User",
-            name="User",
-            endpoint="/Users",
-            schema="urn:ietf:params:scim:schemas:core:2.0:User",
-        )
-    )
+    provider.register_resource_type(ResourceType.from_resource(User))
     return provider
 
 
 @pytest.fixture
 def scim_client(scim_provider):
-    return TestSCIMClient(app=scim_provider, resource_models=(User,))
+    return TestSCIMClient(
+        app=scim_provider,
+        resource_models=(User,),
+        resource_types=[ResourceType.from_resource(User)],
+    )
 
 
 def test_werkzeug_engine(scim_client):

@@ -1,20 +1,19 @@
 import datetime
 
 import pytest
-from httpx import Client
 from scim2_models import Error
 from scim2_models import Group
 from scim2_models import Meta
+from scim2_models import ResourceType
 from scim2_models import User
 
 from scim2_client import RequestNetworkError
 from scim2_client import RequestPayloadValidationError
 from scim2_client import SCIMClientError
 from scim2_client import SCIMRequestError
-from scim2_client.engines.httpx import SyncSCIMClient
 
 
-def test_replace_user(httpserver):
+def test_replace_user(httpserver, sync_client):
     """Nominal case for a User creation object."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
@@ -51,13 +50,11 @@ def test_replace_user(httpserver):
         ),
     )
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.replace(user)
+    response = sync_client.replace(user)
     assert response.model_dump() == user.model_dump()
 
 
-def test_replace_user_dict(httpserver):
+def test_replace_user_dict(httpserver, sync_client):
     """Nominal case for a User creation object by passing a dict."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
@@ -94,13 +91,11 @@ def test_replace_user_dict(httpserver):
         ),
     )
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.replace(user.model_dump())
+    response = sync_client.replace(user.model_dump())
     assert response.model_dump() == user.model_dump()
 
 
-def test_replace_user_dict_bad_schema(httpserver):
+def test_replace_user_dict_bad_schema(httpserver, sync_client):
     """Test case for a User creation object by passing a dict with an invalid or missing schema."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
@@ -126,15 +121,13 @@ def test_replace_user_dict_bad_schema(httpserver):
         "userName": "bjensen@example.com",
     }
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(
         SCIMClientError, match="Cannot guess resource type from the payload"
     ):
-        scim_client.replace(payload)
+        sync_client.replace(payload)
 
 
-def test_dont_check_response_payload(httpserver):
+def test_dont_check_response_payload(httpserver, sync_client):
     """Test the check_response_payload_attribute."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
@@ -156,13 +149,11 @@ def test_dont_check_response_payload(httpserver):
         ),
     )
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.replace(user, check_response_payload=False)
+    response = sync_client.replace(user, check_response_payload=False)
     assert response == {"foo": "bar"}
 
 
-def test_dont_check_request_payload(httpserver):
+def test_dont_check_request_payload(httpserver, sync_client):
     """Test the check_request_payload_attribute.
 
     TODO: Actually check that the payload is sent through the network
@@ -191,9 +182,7 @@ def test_dont_check_request_payload(httpserver):
         "userName": "bjensen@example.com",
     }
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.replace(
+    response = sync_client.replace(
         user,
         check_request_payload=False,
         url="/Users/2819c223-7f76-453a-919d-413861904646",
@@ -213,7 +202,7 @@ def test_dont_check_request_payload(httpserver):
 
 
 @pytest.mark.parametrize("code", [400, 401, 403, 404, 409, 412, 500, 501])
-def test_errors(httpserver, code):
+def test_errors(httpserver, code, sync_client):
     """Test error cases defined in RFC7644."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
@@ -243,9 +232,7 @@ def test_errors(httpserver, code):
         ),
     )
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
-    response = scim_client.replace(user_request, raise_scim_errors=False)
+    response = sync_client.replace(user_request, raise_scim_errors=False)
 
     assert response == Error(
         schemas=["urn:ietf:params:scim:api:messages:2.0:Error"],
@@ -254,7 +241,7 @@ def test_errors(httpserver, code):
     )
 
 
-def test_user_with_no_id(httpserver):
+def test_user_with_no_id(httpserver, sync_client):
     """Test that replacing an user object without and id raises an error."""
     httpserver.expect_request(
         "/Users/2819c223-7f76-453a-919d-413861904646", method="PUT"
@@ -290,28 +277,25 @@ def test_user_with_no_id(httpserver):
         ),
     )
 
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(SCIMClientError, match="Resource must have an id"):
-        scim_client.replace(user)
+        sync_client.replace(user)
 
 
-def test_invalid_resource_model(httpserver):
+def test_invalid_resource_model(httpserver, sync_client):
     """Test that resource_models passed to the method must be part of BaseSCIMClient.resource_models."""
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
+    sync_client.resource_models = (User,)
+    sync_client.resource_types = [ResourceType.from_resource(User)]
+
     with pytest.raises(SCIMRequestError, match=r"Unknown resource type"):
-        scim_client.replace(Group(display_name="foobar"))
+        sync_client.replace(Group(display_name="foobar"))
 
 
-def test_request_validation_error(httpserver):
+def test_request_validation_error(httpserver, sync_client):
     """Test that incorrect input raise a RequestPayloadValidationError."""
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
     with pytest.raises(
         RequestPayloadValidationError, match="Server request payload validation error"
     ):
-        scim_client.replace(
+        sync_client.replace(
             {
                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
                 "active": "not-a-bool",
@@ -319,12 +303,10 @@ def test_request_validation_error(httpserver):
         )
 
 
-def test_request_network_error(httpserver):
+def test_request_network_error(httpserver, sync_client):
     """Test that httpx exceptions are transformed in RequestNetworkError."""
-    client = Client(base_url=f"http://localhost:{httpserver.port}")
-    scim_client = SyncSCIMClient(client, resource_models=(User,))
     user_request = User(user_name="bjensen@example.com", id="anything")
     with pytest.raises(
         RequestNetworkError, match="Network error happened during request"
     ):
-        scim_client.replace(user_request, url="http://invalid.test")
+        sync_client.replace(user_request, url="http://invalid.test")

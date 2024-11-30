@@ -47,8 +47,10 @@ class BaseSCIMClient:
 
     This class can be inherited and used as a basis for request engine integration.
 
-    :param resource_models: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
+    :param resource_models: A collection of :class:`~scim2_models.Resource` models expected to be handled by the SCIM client.
         If a request payload describe a resource that is not in this list, an exception will be raised.
+    :param resource_types: A collection of :class:`~scim2_models.ResourceType` that will be used to guess the
+        server endpoints associated with the resources.
     :param check_request_payload: If :data:`False`,
         :code:`resource` is expected to be a dict that will be passed as-is in the request.
         This value can be overwritten in methods.
@@ -146,6 +148,7 @@ class BaseSCIMClient:
     def __init__(
         self,
         resource_models: Optional[Collection[type[Resource]]] = None,
+        resource_types: Optional[Collection[ResourceType]] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
@@ -153,6 +156,7 @@ class BaseSCIMClient:
         self.resource_models = tuple(
             set(resource_models or []) | {ResourceType, Schema, ServiceProviderConfig}
         )
+        self.resource_types = resource_types
         self.check_request_payload = check_request_payload
         self.check_response_payload = check_response_payload
         self.raise_scim_errors = raise_scim_errors
@@ -169,16 +173,19 @@ class BaseSCIMClient:
         if resource_model is None:
             return "/"
 
+        if resource_model in (ResourceType, Schema):
+            return f"/{resource_model.__name__}s"
+
         # This one takes no final 's'
         if resource_model is ServiceProviderConfig:
             return "/ServiceProviderConfig"
 
-        try:
-            first_bracket_index = resource_model.__name__.index("[")
-            root_name = resource_model.__name__[:first_bracket_index]
-        except ValueError:
-            root_name = resource_model.__name__
-        return f"/{root_name}s"
+        schema = resource_model.model_fields["schemas"].default[0]
+        for resource_type in self.resource_types or []:
+            if schema == resource_type.schema_:
+                return resource_type.endpoint
+
+        raise SCIMRequestError(f"No ResourceType is matching the schema: {schema}")
 
     def check_response(
         self,
