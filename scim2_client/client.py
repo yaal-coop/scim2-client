@@ -514,8 +514,10 @@ class BaseSCIMClient:
     ) -> Optional[Union[AnyResource, dict]]:
         raise NotImplementedError()
 
-    def _discover(self, resource_types, schemas):
-        self.resource_types = resource_types
+    def build_resource_models(
+        self, resource_types: Collection[ResourceType], schemas: Collection[Schema]
+    ) -> tuple[type[Resource]]:
+        """Build models from server objects."""
         resource_types_by_schema = {
             resource_type.schema_: resource_type for resource_type in resource_types
         }
@@ -534,7 +536,7 @@ class BaseSCIMClient:
                 model = model[tuple(extensions)]
             resource_models.append(model)
 
-        self.resource_models = tuple(resource_models)
+        return tuple(resource_models)
 
 
 class BaseSyncSCIMClient(BaseSCIMClient):
@@ -797,7 +799,9 @@ class BaseSyncSCIMClient(BaseSCIMClient):
         """Dynamically discover the server models :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType`."""
         resource_types_response = self.query(ResourceType)
         schemas_response = self.query(Schema)
-        self._discover(resource_types_response.resources, schemas_response.resources)
+        self.resource_types = resource_types_response.resources
+        schemas = schemas_response.resources
+        self.resource_models = self.build_resource_models(self.resource_types, schemas)
 
 
 class BaseAsyncSCIMClient(BaseSCIMClient):
@@ -1062,4 +1066,6 @@ class BaseAsyncSCIMClient(BaseSCIMClient):
         schemas_task = asyncio.create_task(self.query(Schema))
         resource_types_response = await resources_task
         schemas_response = await schemas_task
-        self._discover(resource_types_response.resources, schemas_response.resources)
+        self.resource_types = resource_types_response.resources
+        schemas = schemas_response.resources
+        self.resource_models = self.build_resource_models(self.resource_types, schemas)
