@@ -22,21 +22,24 @@ pip install scim2-client[httpx]
 
 ## Usage
 
-Check the [tutorial](https://scim2-client.readthedocs.io/en/latest/tutorial.html) and the [reference](https://scim2-client.readthedocs.io/en/latest/reference.html) for more details.
+Check the [tutorial](https://scim2-client.readthedocs.io/en/latest/tutorial.html)
+and the [reference](https://scim2-client.readthedocs.io/en/latest/reference.html) for more details.
 
 Here is an example of usage:
 
 ```python
 import datetime
 from httpx import Client
-from scim2_models import User, EnterpriseUser, Group, Error
+from scim2_models import Error
 from scim2_client.engines.httpx import SyncSCIMClient
 
 client = Client(base_url="https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-scim = SyncSCIMClient(client, resource_types=(User[EnterpriseUser], Group))
+scim = SyncSCIMClient(client)
+scim.discover()
+User = scim.get_resource_model("User")
 
 # Query resources
-user = scim.query(User[EnterpriseUser], "2819c223-7f76-453a-919d-413861904646")
+user = scim.query(User, "2819c223-7f76-453a-919d-413861904646")
 assert user.user_name == "bjensen@example.com"
 assert user.meta.last_updated == datetime.datetime(
     2024, 4, 13, 12, 0, 0, tzinfo=datetime.timezone.utc

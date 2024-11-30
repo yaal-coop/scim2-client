@@ -13,19 +13,58 @@ In addition to your SCIM server root endpoint, you will probably want to provide
 .. code-block:: python
 
     from httpx import Client
-    from scim2_models import User, EnterpriseUserUser, Group
     from scim2_client.engines.httpx import SyncSCIMClient
 
     client = Client(base_url="https://auth.example/scim/v2", headers={"Authorization": "Bearer foobar"})
-    scim = SyncSCIMClient(client, resource_models=(User[EnterpriseUser], Group))
+    scim = SyncSCIMClient(client)
 
-You need to give to indicate to :class:`~scim2_client.BaseSCIMClient` all the different :class:`~scim2_models.Resource` types that you will need to manipulate with the :code:`resource_models` parameter.
-This is needed so scim2-client will be able to guess which resource type to instante when an arbitrary payload is met.
+You need to give to indicate to :class:`~scim2_client.BaseSCIMClient` all the different :class:`~scim2_models.Resource` models that you will need to manipulate, and the matching :class:`~scim2_models.ResourceType` objects to let the client know where to look for resources on the server.
 
-.. todo::
+You can either provision those objects manually or automatically.
 
-    We plan to implement the automatic discovery of SCIM server resources,
-    so they can dynamically be used without explicitly passing them with the :code:`resource_models` parameter.
+Automatic provisioning
+~~~~~~~~~~~~~~~~~~~~~~
+
+The easiest way is to let the client discover what :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType` are available on the server by calling :meth:`~scim2_client.BaseSyncSCIMClient.discover`.
+It will dynamically generate models based on those schema, and make them available to use with :meth:`~scim2_client.BaseSCIMClient.get_resource_model`.
+
+.. code-block:: python
+    :caption: Dynamically discover models from the server
+
+    scim.discover()
+    User = scim.get_resource_model("User")
+
+Manual provisioning
+~~~~~~~~~~~~~~~~~~~
+To manually register models and resource types, you can simply use the :paramref:`~scim2_client.BaseSCIMClient.resource_models` and :paramref:`~scim2_client.BaseSCIMClient.resource_types` arguments.
+
+
+.. code-block:: python
+    :caption: Manually registering models and resource types
+
+    from scim2_models import User, EnterpriseUserUser, Group, ResourceType
+    scim = SyncSCIMClient(
+        client,
+        resource_models=[User[EnterpriseUser], Group],
+        resource_types=[ResourceType(id="User", ...), ResourceType(id="Group", ...)],
+    )
+
+.. tip::
+
+   If you know that all the resources are hosted at regular server endpoints
+   (for instance `/Users` for :class:`~scim2_models.User` etc.),
+   you can skip passing the :class:`~scim2_models.ResourceType` objects by hand,
+   and simply call :meth:`~scim2_client.BaseSCIMClient.register_naive_resource_types`.
+
+    .. code-block:: python
+        :caption: Manually registering models and resource types
+
+        from scim2_models import User, EnterpriseUserUser, Group, ResourceType
+        scim = SyncSCIMClient(
+            client,
+            resource_models=[User[EnterpriseUser], Group],
+        )
+        scim.register_naive_resource_types()
 
 Performing actions
 ==================
