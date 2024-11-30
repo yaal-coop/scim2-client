@@ -10,6 +10,10 @@ Changelog
 
     - :class:`~scim2_client.BaseSCIMClient` takes a mandatory :paramref:`~scim2_client.BaseSCIMClient.resource_types` parameter.
 
+Added
+^^^^^
+- Implement :meth:`~scim2_client.BaseSCIMClient.register_naive_resource_types`.
+
 [0.3.3] - 2024-11-29
 --------------------
 

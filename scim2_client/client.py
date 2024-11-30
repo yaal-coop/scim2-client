@@ -187,6 +187,19 @@ class BaseSCIMClient:
 
         raise SCIMRequestError(f"No ResourceType is matching the schema: {schema}")
 
+    def register_naive_resource_types(self):
+        """Register a *naive* :class:`~scim2_models.ResourceType` for each :paramref:`resource_model <scim2_client.BaseSCIMClient.resource_models>`.
+
+        This fills the :class:`~scim2_models.ResourceType` with generic values.
+        The endpoint is the resource name with a *s* suffix.
+        For instance, the :class:`~scim2_models.User` will have a `/Users` endpoint.
+        """
+        self.resource_types = [
+            ResourceType.from_resource(model)
+            for model in self.resource_models
+            if model not in (ResourceType, Schema, ServiceProviderConfig)
+        ]
+
     def check_response(
         self,
         payload: Optional[dict],

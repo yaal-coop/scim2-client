@@ -1,7 +1,6 @@
 import pytest
 from httpx import Client
 from scim2_models import Group
-from scim2_models import ResourceType
 from scim2_models import User
 
 from scim2_client.engines.httpx import SyncSCIMClient
@@ -13,9 +12,6 @@ def sync_client(httpserver):
     scim_client = SyncSCIMClient(
         client,
         resource_models=[User, Group],
-        resource_types=[
-            ResourceType.from_resource(User),
-            ResourceType.from_resource(Group),
-        ],
     )
+    scim_client.register_naive_resource_types()
     return scim_client
