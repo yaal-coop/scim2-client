@@ -6,6 +6,7 @@ import pytest
 from httpx import AsyncClient
 from httpx import Client
 from scim2_models import SearchRequest
+from scim2_models import ServiceProviderConfig
 
 from scim2_client.engines.httpx import AsyncSCIMClient
 from scim2_client.engines.httpx import SyncSCIMClient
@@ -43,7 +44,9 @@ def test_sync_engine(server):
     host, port = server
     client = Client(base_url=f"http://{host}:{port}")
     scim_client = SyncSCIMClient(client)
+
     scim_client.discover()
+    assert isinstance(scim_client.service_provider_config, ServiceProviderConfig)
     User = scim_client.get_resource_model("User")
 
     request_user = User(user_name="foo", display_name="bar")
@@ -78,7 +81,9 @@ async def test_async_engine(server):
     host, port = server
     client = AsyncClient(base_url=f"http://{host}:{port}")
     scim_client = AsyncSCIMClient(client)
+
     await scim_client.discover()
+    assert isinstance(scim_client.service_provider_config, ServiceProviderConfig)
     User = scim_client.get_resource_model("User")
 
     request_user = User(user_name="foo", display_name="bar")

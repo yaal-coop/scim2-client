@@ -54,6 +54,7 @@ class SCIMClient:
         If a request payload describe a resource that is not in this list, an exception will be raised.
     :param resource_types: A collection of :class:`~scim2_models.ResourceType` that will be used to guess the
         server endpoints associated with the resources.
+    :param service_provider_config: An instance of :class:`~scim2_models.ServiceProviderConfig`.
     :param check_request_payload: If :data:`False`,
         :code:`resource` is expected to be a dict that will be passed as-is in the request.
         This value can be overwritten in methods.
@@ -152,12 +153,14 @@ class SCIMClient:
         self,
         resource_models: Optional[Collection[type[Resource]]] = None,
         resource_types: Optional[Collection[ResourceType]] = None,
+        service_provider_config: Optional[ServiceProviderConfig] = None,
         check_request_payload: bool = True,
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
     ):
         self.resource_models = tuple(set(resource_models or []) | set(CONFIG_RESOURCES))
         self.resource_types = resource_types
+        self.service_provider_config = service_provider_config
         self.check_request_payload = check_request_payload
         self.check_response_payload = check_response_payload
         self.raise_scim_errors = raise_scim_errors
@@ -799,6 +802,7 @@ class BaseSyncSCIMClient(SCIMClient):
         """Dynamically discover the server models :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType`."""
         resource_types_response = self.query(ResourceType)
         schemas_response = self.query(Schema)
+        self.service_provider_config = self.query(ServiceProviderConfig)
         self.resource_types = resource_types_response.resources
         schemas = schemas_response.resources
         self.resource_models = self.build_resource_models(self.resource_types, schemas)
@@ -1064,8 +1068,10 @@ class BaseAsyncSCIMClient(SCIMClient):
         """Dynamically discover the server models :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType`."""
         resources_task = asyncio.create_task(self.query(ResourceType))
         schemas_task = asyncio.create_task(self.query(Schema))
+        spc_task = asyncio.create_task(self.query(ServiceProviderConfig))
         resource_types_response = await resources_task
         schemas_response = await schemas_task
+        self.service_provider_config = await spc_task
         self.resource_types = resource_types_response.resources
         schemas = schemas_response.resources
         self.resource_models = self.build_resource_models(self.resource_types, schemas)
