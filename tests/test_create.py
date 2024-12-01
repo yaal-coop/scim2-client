@@ -255,7 +255,7 @@ def test_errors(httpserver, code, sync_client):
 
 
 def test_invalid_resource_model(sync_client):
-    """Test that resource_models passed to the method must be part of BaseSCIMClient.resource_models."""
+    """Test that resource_models passed to the method must be part of SCIMClient.resource_models."""
 
     class MyResource(Resource):
         schemas: list[str] = ["urn:ietf:params:scim:schemas:core:2.0:MyResource"]

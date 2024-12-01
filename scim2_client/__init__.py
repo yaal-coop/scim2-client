@@ -1,5 +1,5 @@
-from .client import BaseSCIMClient
 from .client import BaseSyncSCIMClient
+from .client import SCIMClient
 from .errors import RequestNetworkError
 from .errors import RequestPayloadValidationError
 from .errors import ResponsePayloadValidationError
@@ -12,7 +12,7 @@ from .errors import UnexpectedContentType
 from .errors import UnexpectedStatusCode
 
 __all__ = [
-    "BaseSCIMClient",
+    "SCIMClient",
     "BaseSyncSCIMClient",
     "SCIMClientError",
     "SCIMRequestError",

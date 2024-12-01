@@ -282,7 +282,7 @@ def test_user_with_no_id(httpserver, sync_client):
 
 
 def test_invalid_resource_model(httpserver, sync_client):
-    """Test that resource_models passed to the method must be part of BaseSCIMClient.resource_models."""
+    """Test that resource_models passed to the method must be part of SCIMClient.resource_models."""
     sync_client.resource_models = (User,)
     sync_client.resource_types = [ResourceType.from_resource(User)]
 

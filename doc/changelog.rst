@@ -8,11 +8,11 @@ Changelog
 
     This version comes with breaking changes:
 
-    - :class:`~scim2_client.BaseSCIMClient` takes a mandatory :paramref:`~scim2_client.BaseSCIMClient.resource_types` parameter.
+    - :class:`~scim2_client.SCIMClient` takes a mandatory :paramref:`~scim2_client.SCIMClient.resource_types` parameter.
 
 Added
 ^^^^^
-- Implement :meth:`~scim2_client.BaseSCIMClient.register_naive_resource_types`.
+- Implement :meth:`~scim2_client.SCIMClient.register_naive_resource_types`.
 - Implement :meth:`~scim2_client.BaseSyncSCIMClient.discover` methods.
 
 [0.3.3] - 2024-11-29
@@ -28,9 +28,9 @@ Added
 
 Added
 ^^^^^
-- Implement :class:`~scim2_client.BaseSCIMClient` :paramref:`~scim2_client.BaseSCIMClient.check_request_payload`,
-  :paramref:`~scim2_client.BaseSCIMClient.check_response_payload` and
-  :paramref:`~scim2_client.BaseSCIMClient.raise_scim_errors` paramibutes,
+- Implement :class:`~scim2_client.SCIMClient` :paramref:`~scim2_client.SCIMClient.check_request_payload`,
+  :paramref:`~scim2_client.SCIMClient.check_response_payload` and
+  :paramref:`~scim2_client.SCIMClient.raise_scim_errors` paramibutes,
   to keep the same values for all the requests.
 
 [0.3.1] - 2024-11-29

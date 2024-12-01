@@ -35,7 +35,7 @@ class RequestNetworkError(SCIMRequestError):
 
 
 class RequestPayloadValidationError(SCIMRequestError):
-    """Error raised when an invalid request payload has been passed to BaseSCIMClient.
+    """Error raised when an invalid request payload has been passed to SCIMClient.
 
     This error is raised when a :class:`pydantic.ValidationError` has been caught
     while validating the client request payload.
