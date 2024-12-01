@@ -28,8 +28,10 @@ You can either provision those objects manually or automatically.
 Automatic provisioning
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The easiest way is to let the client discover what :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType` are available on the server by calling :meth:`~scim2_client.BaseSyncSCIMClient.discover`.
-It will dynamically generate models based on those schema, and make them available to use with :meth:`~scim2_client.SCIMClient.get_resource_model`.
+The easiest way is to let the client discover what configuration and resources are available on the server.
+The :meth:`~scim2_client.BaseSyncSCIMClient.discover` method looks for the server :class:`~scim2_models.ServiceProviderConfig`, :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType` endpoints,
+and dynamically generate local Python models based on those schemas.
+They are then available to use with :meth:`~scim2_client.SCIMClient.get_resource_model`.
 
 .. code-block:: python
     :caption: Dynamically discover models from the server
