@@ -72,12 +72,17 @@ class TestSCIMClient(BaseSyncSCIMClient):
         self.scim_prefix = scim_prefix
 
     def make_url(self, url: Optional[str]) -> str:
+        url = url or ""
         prefix = (
             self.scim_prefix[:-1]
             if self.scim_prefix.endswith("/")
             else self.scim_prefix
         )
-        return f"{prefix}{url or ''}"
+        return (
+            url
+            if url.startswith("http://") or url.startswith("https://")
+            else f"{prefix}{url}"
+        )
 
     def create(
         self,

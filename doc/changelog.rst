@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Added
+^^^^^
+- :class:`~scim2_client.engines.werkzeug.TestSCIMClient` can handle absolute URLs.
+
 Changed
 ^^^^^^^
 - Avoid to initialize :paramref:`~scim2_client.SCIMClient.resource_models` with configuration resources.
