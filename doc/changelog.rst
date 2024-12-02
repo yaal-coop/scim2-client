@@ -1,6 +1,9 @@
 Changelog
 =========
 
+[0.4.1] - 2024-12-02
+--------------------
+
 Added
 ^^^^^
 - :class:`~scim2_client.engines.werkzeug.TestSCIMClient` can handle absolute URLs.
