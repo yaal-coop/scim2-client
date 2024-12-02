@@ -158,7 +158,7 @@ class SCIMClient:
         check_response_payload: bool = True,
         raise_scim_errors: bool = True,
     ):
-        self.resource_models = tuple(set(resource_models or []) | set(CONFIG_RESOURCES))
+        self.resource_models = tuple(resource_models or [])
         self.resource_types = resource_types
         self.service_provider_config = service_provider_config
         self.check_request_payload = check_request_payload

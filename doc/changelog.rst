@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Changed
+^^^^^^^
+- Avoid to initialize :paramref:`~scim2_client.SCIMClient.resource_models` with configuration resources.
+
 [0.4.0] - 2024-12-02
 --------------------
 
