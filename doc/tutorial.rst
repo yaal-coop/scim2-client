@@ -38,6 +38,7 @@ They are then available to use with :meth:`~scim2_client.SCIMClient.get_resource
 
     scim.discover()
     User = scim.get_resource_model("User")
+    EnterpriseUser = User.get_extension_model("EnterpriseUser")
 
 Manual provisioning
 ~~~~~~~~~~~~~~~~~~~
