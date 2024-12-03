@@ -45,6 +45,13 @@ def test_sync_engine(server):
     client = Client(base_url=f"http://{host}:{port}")
     scim_client = SyncSCIMClient(client)
 
+    scim_client.discover(
+        schemas=False, resource_types=False, service_provider_config=False
+    )
+    assert not scim_client.resource_models
+    assert not scim_client.resource_types
+    assert not scim_client.service_provider_config
+
     scim_client.discover()
     assert isinstance(scim_client.service_provider_config, ServiceProviderConfig)
     User = scim_client.get_resource_model("User")
@@ -81,6 +88,13 @@ async def test_async_engine(server):
     host, port = server
     client = AsyncClient(base_url=f"http://{host}:{port}")
     scim_client = AsyncSCIMClient(client)
+
+    await scim_client.discover(
+        schemas=False, resource_types=False, service_provider_config=False
+    )
+    assert not scim_client.resource_models
+    assert not scim_client.resource_types
+    assert not scim_client.service_provider_config
 
     await scim_client.discover()
     assert isinstance(scim_client.service_provider_config, ServiceProviderConfig)

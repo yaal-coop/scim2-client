@@ -1,6 +1,14 @@
 Changelog
 =========
 
+[0.4.2] - Unreleased
+--------------------
+
+Added
+^^^^^
+- :class:`~scim2_client.client.BaseSyncSCIMClient.discover` has parameters to select which objects to discover.
+
+
 [0.4.1] - 2024-12-02
 --------------------
 

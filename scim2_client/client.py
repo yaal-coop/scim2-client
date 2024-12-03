@@ -798,14 +798,25 @@ class BaseSyncSCIMClient(SCIMClient):
         """
         raise NotImplementedError()
 
-    def discover(self):
-        """Dynamically discover the server models :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType`."""
-        resource_types_response = self.query(ResourceType)
-        schemas_response = self.query(Schema)
-        self.service_provider_config = self.query(ServiceProviderConfig)
-        self.resource_types = resource_types_response.resources
-        schemas = schemas_response.resources
-        self.resource_models = self.build_resource_models(self.resource_types, schemas)
+    def discover(self, schemas=True, resource_types=True, service_provider_config=True):
+        """Dynamically discover the server configuration objects.
+
+        :param schemas: Whether to discover the :class:`~scim2_models.Schema` endpoint.
+        :param resource_types: Whether to discover the :class:`~scim2_models.ResourceType` endpoint.
+        :param service_provider_config: Whether to discover the :class:`~scim2_models.ServiceProviderConfig` endpoint.
+        """
+        if resource_types:
+            resource_types_response = self.query(ResourceType)
+            self.resource_types = resource_types_response.resources
+
+        if schemas:
+            schemas_response = self.query(Schema)
+            self.resource_models = self.build_resource_models(
+                self.resource_types, schemas_response.resources
+            )
+
+        if service_provider_config:
+            self.service_provider_config = self.query(ServiceProviderConfig)
 
 
 class BaseAsyncSCIMClient(SCIMClient):
@@ -1064,14 +1075,33 @@ class BaseAsyncSCIMClient(SCIMClient):
         """
         raise NotImplementedError()
 
-    async def discover(self):
-        """Dynamically discover the server models :class:`~scim2_models.Schema` and :class:`~scim2_models.ResourceType`."""
-        resources_task = asyncio.create_task(self.query(ResourceType))
-        schemas_task = asyncio.create_task(self.query(Schema))
-        spc_task = asyncio.create_task(self.query(ServiceProviderConfig))
-        resource_types_response = await resources_task
-        schemas_response = await schemas_task
-        self.service_provider_config = await spc_task
-        self.resource_types = resource_types_response.resources
-        schemas = schemas_response.resources
-        self.resource_models = self.build_resource_models(self.resource_types, schemas)
+    async def discover(
+        self, schemas=True, resource_types=True, service_provider_config=True
+    ):
+        """Dynamically discover the server configuration objects.
+
+        :param schemas: Whether to discover the :class:`~scim2_models.Schema` endpoint.
+        :param resource_types: Whether to discover the :class:`~scim2_models.ResourceType` endpoint.
+        :param service_provider_config: Whether to discover the :class:`~scim2_models.ServiceProviderConfig` endpoint.
+        """
+        if schemas:
+            schemas_task = asyncio.create_task(self.query(Schema))
+
+        if resource_types:
+            resources_types_task = asyncio.create_task(self.query(ResourceType))
+
+        if service_provider_config:
+            spc_task = asyncio.create_task(self.query(ServiceProviderConfig))
+
+        if resource_types:
+            resource_types_response = await resources_types_task
+            self.resource_types = resource_types_response.resources
+
+        if schemas:
+            schemas_response = await schemas_task
+            self.resource_models = self.build_resource_models(
+                self.resource_types, schemas_response.resources
+            )
+
+        if service_provider_config:
+            self.service_provider_config = await spc_task
