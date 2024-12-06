@@ -1,6 +1,7 @@
 import pytest
 from scim2_models import SearchRequest
 from scim2_models import User
+from werkzeug.test import Client
 from werkzeug.wrappers import Request
 from werkzeug.wrappers import Response
 
@@ -27,9 +28,10 @@ def scim_provider():
 
 @pytest.fixture
 def scim_client(scim_provider):
-    client = TestSCIMClient(app=scim_provider)
-    client.discover()
-    return client
+    werkzeug_client = Client(scim_provider)
+    scim_client = TestSCIMClient(werkzeug_client)
+    scim_client.discover()
+    return scim_client
 
 
 def test_werkzeug_engine(scim_client):
@@ -69,6 +71,25 @@ def test_no_json():
     def application(request):
         return Response("Hello, World!", content_type="application/scim+json")
 
-    client = TestSCIMClient(app=application, resource_models=(User,))
+    werkzeug_client = Client(application)
+    scim_client = TestSCIMClient(client=werkzeug_client, resource_models=(User,))
+    scim_client.register_naive_resource_types()
     with pytest.raises(UnexpectedContentFormat):
-        client.query(url="/")
+        scim_client.query(url="/")
+
+
+def test_environ(scim_client):
+    @Request.application
+    def application(request):
+        assert request.headers["content-type"] == "foobar"
+        user = User(user_name="foobar", id="foobar")
+        return Response(user.model_dump_json(), content_type="application/scim+json")
+
+    werkzeug_client = Client(application)
+    scim_client = TestSCIMClient(
+        client=werkzeug_client,
+        environ={"headers": {"content-type": "foobar"}},
+        resource_models=(User,),
+    )
+    scim_client.register_naive_resource_types()
+    scim_client.query(url="/Users")

@@ -37,10 +37,10 @@ class TestSCIMClient(BaseSyncSCIMClient):
     This client avoids to perform real HTTP requests and directly execute the server code instead.
     This allows to dynamically catch the exceptions if something gets wrong.
 
-    :param app: A WSGI application instance that will be used to send requests.
     :param client: An optional custom :class:`Werkzeug test Client <werkzeug.test.Client>`.
         If :data:`None` a default client is initialized.
     :param scim_prefix: The scim root endpoint in the application.
+    :param environ: Additional parameters that will be passed to every request.
     :param resource_models: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
         If a request payload describe a resource that is not in this list, an exception will be raised.
     :param check_request_payload: If :data:`False`,
@@ -56,9 +56,14 @@ class TestSCIMClient(BaseSyncSCIMClient):
 
         from scim2_client.engines.werkzeug import TestSCIMClient
         from scim2_models import User, Group
+        from werkzeug.test import Client
 
         scim_provider = myapp.create_app()
-        testclient = TestSCIMClient(app=scim_provider, resource_models=(User, Group))
+        testclient = TestSCIMClient(
+            app=Client(scim_provider),
+            environ={"base_url": "/scim/v2"},
+            resource_models=(User, Group),
+        )
 
         request_user = User(user_name="foo", display_name="bar")
         response_user = scim_client.create(request_user)
@@ -70,15 +75,16 @@ class TestSCIMClient(BaseSyncSCIMClient):
 
     def __init__(
         self,
-        app,
-        client: Optional[Client] = None,
-        *args,
+        client: Client,
+        environ: Optional[dict] = None,
         scim_prefix: str = "",
+        *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.client = client or Client(app)
+        self.client = client
         self.scim_prefix = scim_prefix
+        self.environ = environ or {}
 
     def make_url(self, url: Optional[str]) -> str:
         url = url or ""
@@ -112,9 +118,8 @@ class TestSCIMClient(BaseSyncSCIMClient):
             **kwargs,
         )
 
-        response = self.client.post(
-            self.make_url(req.url), json=req.payload, **req.request_kwargs
-        )
+        environ = {**self.environ, **req.request_kwargs}
+        response = self.client.post(self.make_url(req.url), json=req.payload, **environ)
 
         with handle_response_error(req.payload):
             return self.check_response(
@@ -152,8 +157,9 @@ class TestSCIMClient(BaseSyncSCIMClient):
         )
 
         query_string = urlencode(req.payload, doseq=False) if req.payload else None
+        environ = {**self.environ, **req.request_kwargs}
         response = self.client.get(
-            self.make_url(req.url), query_string=query_string, **req.request_kwargs
+            self.make_url(req.url), query_string=query_string, **environ
         )
 
         with handle_response_error(req.payload):
@@ -187,9 +193,8 @@ class TestSCIMClient(BaseSyncSCIMClient):
             **kwargs,
         )
 
-        response = self.client.post(
-            self.make_url(req.url), json=req.payload, **req.request_kwargs
-        )
+        environ = {**self.environ, **req.request_kwargs}
+        response = self.client.post(self.make_url(req.url), json=req.payload, **environ)
 
         with handle_response_error(response):
             return self.check_response(
@@ -222,7 +227,8 @@ class TestSCIMClient(BaseSyncSCIMClient):
             **kwargs,
         )
 
-        response = self.client.delete(self.make_url(req.url), **req.request_kwargs)
+        environ = {**self.environ, **req.request_kwargs}
+        response = self.client.delete(self.make_url(req.url), **environ)
 
         with handle_response_error(response):
             return self.check_response(
@@ -253,9 +259,8 @@ class TestSCIMClient(BaseSyncSCIMClient):
             **kwargs,
         )
 
-        response = self.client.put(
-            self.make_url(req.url), json=req.payload, **req.request_kwargs
-        )
+        environ = {**self.environ, **req.request_kwargs}
+        response = self.client.put(self.make_url(req.url), json=req.payload, **environ)
 
         with handle_response_error(response):
             return self.check_response(

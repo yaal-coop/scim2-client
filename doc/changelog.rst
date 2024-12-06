@@ -1,12 +1,15 @@
 Changelog
 =========
 
-[0.4.4] - Unreleased
+[0.5.0] - Unreleased
 --------------------
 
-Added
-^^^^^
-- :class:`~scim2_client.engines.werkzeug.TestSCIMClient` can take a `client` parameter.
+.. warning::
+
+    This version comes with breaking changes:
+
+    - :class:`~scim2_client.engines.werkzeug.TestSCIMClient` ``app`` is dropped in favor
+      of ``client`` and ``environ``. Have a look at the reference for examples.
 
 [0.4.3] - 2024-12-06
 --------------------
