@@ -1,9 +1,18 @@
 Changelog
 =========
 
+[0.4.4] - Unreleased
+--------------------
+
+Added
+^^^^^
+- :class:`~scim2_client.engines.werkzeug.TestSCIMClient` can take a `client` parameter.
+
 [0.4.3] - 2024-12-06
 --------------------
 
+Added
+^^^^^
 - Add :paramref:`~scim2_client.SCIMClient.check_response_content_type` and
   :paramref:`~scim2_client.SCIMClient.check_response_status_codes` parameters.
 

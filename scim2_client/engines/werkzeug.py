@@ -37,7 +37,9 @@ class TestSCIMClient(BaseSyncSCIMClient):
     This client avoids to perform real HTTP requests and directly execute the server code instead.
     This allows to dynamically catch the exceptions if something gets wrong.
 
-    :param client: A WSGI application instance that will be used to send requests.
+    :param app: A WSGI application instance that will be used to send requests.
+    :param client: An optional custom :class:`Werkzeug test Client <werkzeug.test.Client>`.
+        If :data:`None` a default client is initialized.
     :param scim_prefix: The scim root endpoint in the application.
     :param resource_models: A tuple of :class:`~scim2_models.Resource` types expected to be handled by the SCIM client.
         If a request payload describe a resource that is not in this list, an exception will be raised.
@@ -66,9 +68,16 @@ class TestSCIMClient(BaseSyncSCIMClient):
     # avoid making Pytest believe this is a test class
     __test__ = False
 
-    def __init__(self, app, *args, scim_prefix: str = "", **kwargs):
+    def __init__(
+        self,
+        app,
+        client: Optional[Client] = None,
+        *args,
+        scim_prefix: str = "",
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
-        self.client = Client(app)
+        self.client = client or Client(app)
         self.scim_prefix = scim_prefix
 
     def make_url(self, url: Optional[str]) -> str:
