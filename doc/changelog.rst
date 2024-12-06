@@ -7,7 +7,8 @@ Changelog
 Added
 ^^^^^
 - :class:`~scim2_client.client.BaseSyncSCIMClient.discover` has parameters to select which objects to discover.
-
+- Add :paramref:`~scim2_client.SCIMClient.check_response_content_type` and
+  :paramref:`~scim2_client.SCIMClient.check_response_status_codes` parameters.
 
 [0.4.1] - 2024-12-02
 --------------------
