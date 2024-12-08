@@ -265,7 +265,6 @@ class SCIMClient:
         if raise_scim_errors is None:
             raise_scim_errors = self.raise_scim_errors
 
-        self._check_status_codes(status_code, expected_status_codes)
         self._check_content_types(headers)
 
         # In addition to returning an HTTP response code, implementers MUST return
@@ -283,6 +282,7 @@ class SCIMClient:
             check_response_payload = self.check_response_payload
 
         if not check_response_payload:
+            self._check_status_codes(status_code, expected_status_codes)
             return response_payload
 
         if (
@@ -293,6 +293,8 @@ class SCIMClient:
             if raise_scim_errors:
                 raise SCIMResponseErrorObject(obj=error.detail, source=error)
             return error
+
+        self._check_status_codes(status_code, expected_status_codes)
 
         if not expected_types:
             return response_payload

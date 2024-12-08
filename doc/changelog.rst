@@ -1,6 +1,14 @@
 Changelog
 =========
 
+[0.5.1] - Unreleased
+--------------------
+
+Changed
+^^^^^^^
+- Check response return codes after the error state.
+  This helps providing more useful error messages.
+
 [0.5.0] - 2024-12-06
 --------------------
 
