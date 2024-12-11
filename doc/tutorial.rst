@@ -5,7 +5,7 @@ Initialization
 ==============
 
 scim2-client depends on request engines such as `httpx <https://github.com/encode/httpx>`_ to perform network requests.
-This tutorial demonstrate how to use scim2-client with httpx, and suppose you have installed the `httpx` extra for example with ``pip install scim2-models[httpx]``.
+This tutorial demonstrate how to use scim2-client with httpx, and suppose you have installed the `httpx` extra for example with ``pip install scim2-client[httpx]``.
 
 As a start you will need to instantiate a httpx :code:`Client` object that you can parameter as your will, and then pass it to a :class:`~scim2_client.SCIMClient` object.
 In addition to your SCIM server root endpoint, you will probably want to provide some authorization headers through the httpx :code:`Client` :code:`headers` parameter:
